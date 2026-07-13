@@ -34,3 +34,13 @@ export const worlds: World[] = [
       "A red dragon flying over a sunny tropical beach with turquoise water, palm trees and seashells",
   },
 ];
+
+/**
+ * Resolve the world chosen in the carousel (carried through the flow as the
+ * `?world=` query param) into its record. Falls back to the first world
+ * (Mountain Peaks) when the slug is missing or unknown, so a deep-link or a
+ * mid-flow refresh still renders a valid background instead of breaking.
+ */
+export function getWorldBySlug(slug?: string): World {
+  return worlds.find((world) => world.slug === slug) ?? worlds[0];
+}

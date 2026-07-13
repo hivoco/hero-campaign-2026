@@ -97,7 +97,7 @@ intact.
 | R1 | Nit | Design-fidelity / doc drift | CLAUDE.md documented the tagline **line 1 as "outlined via `-webkit-text-stroke`"**, but the code renders both lines flat (solid `cloud` italic + drop-shadow) — no stroke anywhere in `src/`. | ✅ **Reconciled (doc)** |
 
 ### R1 · Tagline line-1 stroke — doc vs. code divergence (Nit)
-Adversarially CONFIRMED: `page.tsx:56-61` styles both tagline spans identically (`display block … text-cloud
+Adversarially CONFIRMED: `page.tsx:56-61` styles both tagline spans identically (`display block … text-white
 italic drop-shadow-[…]`); a repo-wide grep for `text-stroke`/`WebkitTextStroke` returns nothing, yet
 CLAUDE.md's `/thank-you` row claimed a `-webkit-text-stroke` outline on line 1. Not a functional defect
 (renders legibly) — purely a design-fidelity/handoff mismatch the prior review didn't flag.

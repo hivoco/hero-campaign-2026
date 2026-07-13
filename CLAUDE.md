@@ -22,10 +22,10 @@ A campaign flow of full-screen, phone-width (`max-w-[440px]`) screens. Built & v
 | Route | Screen | Notes |
 |-------|--------|-------|
 | `/` | Landing | `hero-bg.png` full-bleed, logo, glass welcome panel, Destini wordmark, "Start Your Adventure" pill → `/world-selection`. Server component. |
-| `/world-selection` | World carousel | shadcn/embla carousel, centered card + peeking neighbours, **no dots**. Active world's image is the crossfading blurred background. Card → button → `/pick-story`. Client (`world-carousel.tsx`). |
-| `/pick-story` | Story grid | 2×2 glass cards, circular thumbnails + titles → `/language`. Server component. |
-| `/language` | Language select | **Server component** (`language-select.tsx`) — a full-height list of glass rows over the blurred mountain scene that **fill the screen; no CTA button**. Each row is a `<Link href="/details?lang=…">`, so **tapping a language navigates straight to `/details`** (the choice *is* the action). The red left→right gradient is the hover/focus/press affordance (reads like the "selected" row). Big left-aligned `.display` heading. Ships zero client JS. |
-| `/details` | Details + selfie | "**Every Adventure Needs Heroes**" / "Upload or click a selfie with your little one to begin the journey. Fill in a few details below & let's bring your story to life." (both **left-aligned**). Server page renders bg/logo/heading/subtitle; client `details-form.tsx` (**native HTML validation** — `required`/`pattern`, no JS form lib) holds a **full-width dashed selfie dropzone** (a **`flex-1` dropzone that grows/shrinks with the viewport** so the whole form fits `h-dvh` down to iPhone-SE heights; camera-in-circle + "UPLOAD OR CLICK SELFIE"; a committed photo fills it) that opens a source choice (`selfie-source-sheet.tsx`) → the **capture overlay** in `mode="camera"` or `"upload"` (upload shows the same c0 instructions, then the file picker) — both run the `localCheck → uploadSelfie` pipeline before committing — plus name/child/phone inputs, WhatsApp helper, and the Send OTP pill. Send OTP **opens the OTP sheet in place** (does not navigate). Client. |
+| `/world-selection` | World carousel | shadcn/embla carousel, centered card + peeking neighbours, **no dots**. Active world's image is the crossfading blurred background. Card → button → `/pick-story?world=…` — the **chosen world's slug is threaded through the rest of the flow** (see below). Client (`world-carousel.tsx`). |
+| `/pick-story` | Story grid | 2×2 cards (inline-Tailwind glass — `bg-black/5` + `border-white/25` + `backdrop-blur-xs`, **not** the `.glass` class), circular thumbnails + titles → `/language?world=…&story=…`. Cards use the `pressable` primitive + a **red pressed state** (`active:border-hero-red-bright active:bg-hero-red/30`) for obvious touch feedback. **Background is the chosen world's scene** (`?world=` → `getWorldBySlug`, falls back to `mountain-peaks`). Async server component. |
+| `/language` | Language select | **Server component** (`language-select.tsx`) — a full-height list of glass rows over the **blurred chosen-world scene** (bg from the `?world=` param) that **fill the screen; no CTA button**. Each row is a `<Link href="/details?world=…&lang=…">`, so **tapping a language navigates straight to `/details`** (the choice *is* the action). The red left→right gradient is the hover/focus/press affordance (reads like the "selected" row). Big left-aligned `.display` heading. Ships zero client JS. |
+| `/details` | Details + selfie | "**Every Adventure Needs Heroes**" / "Upload or click a selfie with your little one to begin the journey. Fill in a few details below & let's bring your story to life." (both **centered**). Async server page renders bg (**the chosen world's scene** from `?world=`)/logo/heading/subtitle; client `details-form.tsx` (**native HTML validation** — `required`/`pattern`, no JS form lib) holds a **full-width dashed selfie dropzone** (a **`flex-1` dropzone that grows/shrinks with the viewport** so the whole form fits `h-dvh` down to iPhone-SE heights; camera-in-circle + "UPLOAD OR CLICK SELFIE"; a committed photo fills it) that opens a source choice (`selfie-source-sheet.tsx`) → the **capture overlay** in `mode="camera"` or `"upload"` (upload shows the same c0 instructions, then the file picker) — both run the `localCheck → uploadSelfie` pipeline before committing — plus name/child/phone inputs, WhatsApp helper, and the Send OTP pill. Send OTP **opens the OTP sheet in place** (does not navigate). Client. |
 | `/details` (overlay) | Selfie capture | Full-screen **dark** `capture-overlay.tsx` (mounted from the selfie box; **`mode="camera" \| "upload"`** — both paths show c0 first). **c0**: `dos-donts.png` grid + tips, with a **full-width progress bar pinned to the top in both modes** that fills over `INTRO_AUTOSTART_MS` (8s), rAF-driven off elapsed time so the fill stays in sync with the hand-off. **Camera mode auto-advances** when the bar fills — opens the camera on its own, **no button** — **except under `prefers-reduced-motion`**, where neither mode auto-advances and camera mode instead reveals an **"Open camera"** tap button (via a `useSyncExternalStore` media-query hook), honouring the motion preference and giving slow readers an untimed path (WCAG 2.2.1). **Upload mode** can't auto-open a file dialog (browsers need a user gesture), so when the bar ends it **reveals the "Choose a photo" button** (in a reserved `h-14` slot, `animate-rise`, auto-focused) — that tap is the gesture that opens the picker. On open the overlay focuses each step's primary control, **falling back to the close button** when there isn't one yet (camera intro / disabled Capture) so focus always enters the dialog. ⚠️ **TEMP "Skip the wait" button** (dashed pill at c0's bottom): **zeroes the 8s countdown** — `onClick={onOpen}`, so it advances to the next step (camera / picker) immediately, exactly like the bar hitting 100%. It does **not** skip capture or commit a placeholder — the real capture flow still runs. **Intentionally live on prod preview links too** — search `TODO(remove before launch)` in `capture-overlay.tsx` and delete before real launch. **c1** live camera: oval preview **CSS-mirrored** for natural framing (the saved file is **mirrored to match**); the oval border goes **red→green live** via the **two-face** gate. **c2/c3** wrong (red) / correct (green). Live gate + on-still `localCheck` use **lazily-loaded `@vladmandic/face-api`** (tiny weights in `public/models/`), then the (stubbed) `uploadSelfie`. No-camera/denied → **Upload fallback**. `use-camera.ts` owns the getUserMedia teardown. Client. |
 | `/details` (modal) | OTP + consent | Bottom-sheet `verify-modal.tsx` — a deliberately **light/white** sheet rising over the blurred details screen. "Verify Your Number", 6 OTP boxes (auto-advance/backspace/paste/arrows, focus-trapped, Escape-closes), terms line, eligibility declaration, 4 consent rows (2 required `z.literal(true)`, 2 optional). "Submit & Generate" gates on `verify-schema.ts` → `/thank-you`. Client. |
 | `/thank-you` | End screen | `hero-bg.png` full-bleed campaign hero, "Back to Home" glass pill + logo, "Hero Ka Scooter / Scooter Ka Hero" tagline plate (both lines solid `cloud` italic `.display` + drop-shadow — the flat look, confirmed intended; there is no `-webkit-text-stroke`), confirmation copy, Destini wordmark. Server component. |
@@ -46,7 +46,7 @@ closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update 
 
 **Key decisions already made**:
 - Fonts: **Bebas Neue** (display) + Helvetica Neue (body) — the user swapped these in (was Anton/Poppins).
-- `/details` form: heading is **"Every Adventure Needs Heroes"**, left-aligned, with the subtitle "Upload
+- `/details` form: heading is **"Every Adventure Needs Heroes"**, centered, with the subtitle "Upload
   or click a selfie with your little one to begin the journey. Fill in a few details below & let's bring
   your story to life." (This came back from a user reference — it replaced the interim "Almost There",
   which had replaced this same title once before; history: "Every hero needs a face" → "Every Adventure
@@ -79,10 +79,18 @@ closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update 
   fields validate does it open the OTP sheet in place (no navigation). The old under-field hint ("Add your
   selfie…/Complete every field…") was **removed**.
 - `/language`: **redesigned to a tap-to-navigate list** (from a user reference) — the rows fill the screen
-  and there is **no Continue button**; each row is a `<Link>` to `/details?lang=…` so selecting *is*
+  and there is **no Continue button**; each row is a `<Link>` to `/details?world=…&lang=…` so selecting *is*
   advancing. This let it drop `"use client"` and become a **Server Component** (was a client radiogroup +
   Continue pill). The red gradient is now the hover/focus/press affordance, not a persistent "selected"
   state. `?story=` from `/pick-story` and `?lang=` onward are still passed-but-unused (by design).
+- **Chosen world carries through as the background**: the world picked in the carousel is threaded via the
+  **`?world=<slug>` query param** through `/pick-story` → `/language` → `/details`, and each of those
+  (now **async Server Components** reading `searchParams`, a `Promise` in Next 16) resolves it with
+  **`getWorldBySlug(slug)` in `src/lib/worlds.ts`** to set its full-bleed background to that world's scene.
+  `getWorldBySlug` **falls back to the first world (`mountain-peaks`)** when the slug is missing/unknown, so
+  a deep-link or mid-flow refresh never breaks; each screen threads the **resolved** slug onward (so a bad
+  slug is normalised to `mountain-peaks` downstream too). `/thank-you` is unaffected (keeps `hero-bg.png`).
+  Reading `searchParams` opts these pages into **dynamic rendering** — expected here.
 - **Selfie capture + validation** (the "camera flow"): `capture-overlay.tsx` runs c0→c1→c2→c3 as a
   conditionally-mounted overlay; `use-camera.ts` owns getUserMedia with single-owner teardown (camera off
   on capture/close). Both upload and capture funnel through `selfie-check.ts`: **`localCheck` (client) then
@@ -113,7 +121,9 @@ closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update 
   its validation in `src/lib/verify-schema.ts`. Sheet slide-up + backdrop fade use `.animate-sheet-up` /
   `.animate-fade` keyframes added to `globals.css`.
 - Immersive backgrounds: un-blurred `next/image` + an overlay `bg-black/45 backdrop-blur-[10px]` (NOT a
-  `blur-*` filter on the image). `pick-story` and `language` use `mountain-peaks.png` as the bg.
+  `blur-*` filter on the image). `pick-story`, `language`, and `details` now use the **chosen world's
+  scene** as the bg (threaded via `?world=`; see "Chosen world carries through" above) — defaulting to
+  `mountain-peaks.png`. `language`'s overlay is a slightly lighter `bg-black/40 backdrop-blur-[9px]`.
 - shadcn is installed but its default neutral palette is intentionally undefined — restyle every shadcn
   component with the Hero glass system.
 - Story thumbnails in `public/stories/` were cropped from a full-page mockup the user dropped (their
@@ -166,6 +176,16 @@ reinvent them or hardcode values.** Extend the theme when something genuinely ne
 **Motion**: `.animate-rise` (staggered entrance, pair with `[animation-delay:*ms]`); ease with the
 **`ease-out-soft`** utility (the `--ease-out-soft` token — the whole app was migrated off the arbitrary
 `ease-[var(--ease-out-soft)]`, so use the bare token). Everything is neutralised under `prefers-reduced-motion`.
+
+**Press/tap feedback** (`pressable`, `src/lib/pressable.ts`): a **reusable className constant** of Tailwind
+utilities for interactive links/buttons — kills the default mobile tap-highlight
+(`[-webkit-tap-highlight-color:transparent]`) and, since touch has no `:hover`, gives an obvious
+`active:scale-[0.97] active:brightness-110` press. Compose with `cn()` and layer a per-surface accent, e.g.
+`cn(pressable, "…", "active:border-hero-red-bright active:bg-hero-red/30")` (how `/pick-story`'s story cards
+do their red pressed state). `scale`/`brightness` are their own CSS properties in Tailwind v4, so it won't
+clobber a `hover:-translate-*` lift; motion is neutralised by the global reduced-motion reset. **Prefer this
+over ad-hoc `active:` classes** on new tappables so touch feedback stays consistent. (Replaced an earlier
+per-card `useLinkStatus` overlay component — simpler and reusable app-wide.)
 
 **Layout pattern**: each screen is a `max-w-[440px]` phone frame, centered with a dark `ink` surround on
 desktop, full-bleed on mobile. Full-bleed `next/image` background + a top/bottom legibility scrim, with

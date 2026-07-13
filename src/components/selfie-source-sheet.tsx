@@ -86,7 +86,7 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
 
           <h2
             id={titleId}
-            className="display mt-4 text-center text-[1.75rem] text-cloud"
+            className="display mt-4 text-center text-[1.75rem] text-white"
           >
             Add your selfie
           </h2>
@@ -113,7 +113,7 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="mt-4 h-11 w-full rounded-pill text-[0.95rem] font-medium text-mist transition hover:text-cloud focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+            className="mt-4 h-11 w-full rounded-pill text-[0.95rem] font-medium text-mist transition hover:text-white focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
           >
             Cancel
           </button>
@@ -149,7 +149,7 @@ const SourceRow = React.forwardRef<
         {icon}
       </span>
       <span className="flex flex-col">
-        <span className="text-[1rem] font-semibold text-cloud">{title}</span>
+        <span className="text-[1rem] font-semibold text-white">{title}</span>
         <span className="text-[0.8rem] text-mist">{subtitle}</span>
       </span>
     </button>

@@ -19,7 +19,7 @@
   --color-mist: #cbd3e1; /* secondary text on imagery */
 
   /* Typography ------------------------------------------------------ */
-  --font-display: var(--font-display), "Oswald", "Arial Narrow", sans-serif;
+  --font-display: var(--font-display), "Bebas Neue", "Arial Narrow", sans-serif;
   --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* Radii ----------------------------------------------------------- */
@@ -39,14 +39,14 @@
 
 /* Glass surface primitives — reused across every campaign screen. */
 :root {
-  --glass-fill: rgb(255 255 255 / 0.1);
-  --glass-fill-strong: rgb(255 255 255 / 0.16);
-  --glass-border: rgb(255 255 255 / 0.35);
-  --glass-blur: 14px;
+  --glass-fill: rgb(255 255 255 / 0.25);
+  --glass-fill-strong: rgb(255 255 255 / 0.25);
+  --glass-border: rgb(255 255 255 / 0.25);
+  --glass-blur:4px;
 }
 
 html {
-  color-scheme: dark;
+  /* color-scheme: dark; */
 }
 
 body {
@@ -57,13 +57,14 @@ body {
 }
 
 /* Frosted-glass surface. Compose with Tailwind for layout/spacing. */
+
 .glass {
   background: var(--glass-fill);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  box-shadow: var(--shadow-glass), inset 0 1px 0 rgb(255 255 255 / 0.25);
 }
+
+
 
 /* Display headings: condensed, heavy, tight — the campaign's voice. */
 .display {

@@ -60,11 +60,10 @@ export function WorldCarousel({ worlds }: { worlds: World[] }) {
           width={536}
           height={197}
           preload
-          style={{ height: "auto" }}
-          className="mx-auto w-[8.25rem] animate-rise drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]"
+          className="mx-auto h-11 w-auto animate-rise"
         />
 
-        <h1 className="display mt-6 text-center text-[1.6rem] leading-tight text-cloud drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] animate-rise [animation-delay:100ms]">
+        <h1 className="display mt-6 text-center text-[2rem] font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#0000004D] animate-rise [animation-delay:100ms]">
           Where would you like to go?
         </h1>
 
@@ -94,7 +93,7 @@ function WorldCard({ world, active }: { world: World; active: boolean }) {
   return (
     <div
       className={cn(
-        "glass rounded-sheet p-6 transition-all duration-500 ease-out-soft",
+        "rounded-sheet border border-white/10 bg-white/10 backdrop-blur-[1px] p-6 transition-all duration-500 ease-out-soft",
         active ? "scale-100 opacity-100" : "scale-[0.93] opacity-45"
       )}
     >
@@ -104,21 +103,21 @@ function WorldCard({ world, active }: { world: World; active: boolean }) {
           non-image chrome — screen padding + logo + heading, plus the card's
           own padding, title, description and CTA — so the full card (not just
           the image) fits on iPhone-SE-class heights (≤667). */}
-      <div className="relative mx-auto aspect-[3/4] max-h-[calc(100dvh-26rem)] overflow-hidden rounded-2xl bg-ink-soft ring-1 ring-white/15">
+      <div className="relative mx-auto aspect-3/4 max-h-[calc(100dvh-26rem)] overflow-hidden rounded-2xl bg-ink-soft ring-1 ring-white/15">
         <Image
           src={world.image}
           alt={world.imageAlt}
           fill
-          sizes="360px"
-          className="object-cover"
+          sizes="400px"
+          className="h-full w-auto"
         />
       </div>
 
-      <h2 className="display mt-5 text-center text-[1.9rem] leading-none text-cloud drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+      <h2 className="display mt-5 text-center text-[2.4rem] font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080]">
         {world.title}
       </h2>
 
-      <p className="mx-auto mt-2.5 max-w-[15rem] text-center text-[0.82rem] font-medium leading-snug text-cloud/90">
+      <p className="mx-auto mt-2.5 max-w-[15rem] text-center text-[0.82rem] font-medium leading-snug text-white/90">
         {world.description}
       </p>
 

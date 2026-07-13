@@ -7,6 +7,7 @@ import { ArrowRight, Camera, Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { pressable } from "@/lib/pressable";
 import { localCheck, reasonLine, uploadSelfie } from "@/lib/selfie-check";
 import { SelfieSourceSheet } from "@/components/selfie-source-sheet";
 
@@ -155,7 +156,7 @@ export function DetailsForm() {
             re-pick); being a sibling (not nested in the dropzone) its tap can't
             trigger the source sheet or the change badge, and being absolute it
             never reflows the form. */}
-        <div className="relative flex min-h-0 w-full flex-1 flex-col">
+        <div className="relative flex min-h-0 w-full flex-1 flex-col md:max-h-56">
           <button
             ref={selfieButtonRef}
             type="button"
@@ -212,7 +213,7 @@ export function DetailsForm() {
                 <span className="flex size-12 items-center justify-center rounded-full bg-white text-ink shadow-[0_4px_14px_rgba(0,0,0,0.35)] transition-transform duration-200 ease-out-soft group-hover:scale-105">
                   <Camera aria-hidden className="size-5" strokeWidth={2} />
                 </span>
-                <span className="text-[0.78rem] font-medium tracking-[0.14em] text-cloud uppercase">
+                <span className="text-[0.78rem] font-medium tracking-[0.14em] text-white uppercase">
                   Upload or click selfie
                 </span>
               </span>
@@ -241,7 +242,7 @@ export function DetailsForm() {
                   className="size-5 shrink-0 text-hero-red-bright"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[0.82rem] leading-snug text-cloud">
+                  <span className="block text-[0.82rem] leading-snug text-white">
                     {uploadError.reason}
                   </span>
                   <span className="mt-0.5 block text-[0.8rem] font-semibold text-hero-red-bright">
@@ -263,7 +264,7 @@ export function DetailsForm() {
 
         {/* Details — validation is native HTML only (required / pattern); the
             browser shows its own messages on submit. */}
-        <div className="mt-5 flex shrink-0 flex-col gap-3">
+        <div className="mt-5 flex shrink-0 flex-col gap-2">
           <Field
             label="Your name"
             name="name"
@@ -296,7 +297,7 @@ export function DetailsForm() {
         </div>
 
         {/* WhatsApp helper */}
-        <p className="mt-2.5 flex items-center gap-1.5 px-1 text-[0.8rem] text-mist">
+        <p className="mt-2.5 flex items-center gap-0.5 px-1 text-[0.8rem] text-mist">
           <span>*Your verification code will be sent on</span>
           <Image
             src="/whatsapp.png"
@@ -310,23 +311,20 @@ export function DetailsForm() {
 
         {/* Primary CTA — always enabled so a press on an incomplete form
             triggers native field warnings (and the missing-selfie error above),
-            never a dead no-op. Hero red at all times. */}
+            never a dead no-op. A translucent dark-glass pill (design reference),
+            deepening on hover. */}
         <button
           type="submit"
           className={cn(
-            "glass group relative mt-4 mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft",
-            "hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
-            // `.glass` sets its own box-shadow and, being defined after the
-            // utilities, clobbers a box-shadow `ring`, so the focus ring never
-            // paints — use an `outline` instead (matches selfie-source-sheet).
+            pressable,
+            "group mt-4 mb-1 flex h-14 shrink-0 items-center justify-center rounded-pill border border-white/25 bg-[#424242]/25 px-6 text-[1.05rem] font-semibold tracking-wide text-white backdrop-blur-xs backdrop-saturate-[1.4] transition duration-200 ease-out-soft",
+            "hover:-translate-y-0.5 hover:bg-[#424242]/40 hover:shadow-lift active:translate-y-0",
+            // Focus as an `outline` (drawn outside the border box) — matches
+            // selfie-source-sheet.
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
           )}
         >
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-pill bg-hero-red/90 ring-1 ring-hero-red-bright ring-inset transition-colors duration-200 group-hover:bg-hero-red"
-          />
-          <span className="relative z-10 flex items-center">
+          <span className="flex items-center">
             Send OTP
             <ArrowRight
               aria-hidden
@@ -397,9 +395,9 @@ function Field({ label, className, ...props }: FieldProps) {
       <input
         id={id}
         className={cn(
-          "glass h-14 w-full rounded-input px-5 text-[1rem] text-cloud transition duration-200 ease-out-soft outline-none placeholder:text-mist",
-          // Outline, not `ring`: `.glass`'s own box-shadow clobbers a box-shadow
-          // ring (see selfie-source-sheet), so the ring would never paint.
+          "w-full rounded-lg border border-white/25 bg-[#424242]/25 px-5 py-3 text-[1rem] text-white backdrop-blur-xs backdrop-saturate-[1.4] transition duration-200 ease-out-soft outline-none placeholder:text-white/50",
+          // Focus as an `outline` (not a box-shadow `ring`) — matches the CTA
+          // + selfie-source-sheet.
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
           className,
         )}

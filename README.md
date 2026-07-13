@@ -136,17 +136,21 @@ Design language (apply on every screen):
 
 **2. World selection** — swipeable carousel of glass cards with neighbouring cards peeking left/right.
 Each card: image, title, description, and a circular next-arrow button. The active world's scene is the
-blurred full-screen background. Worlds: Mountain Peaks, Jungle Valley, Coastal Kingdom.
+blurred full-screen background. Worlds: Mountain Peaks, Jungle Valley, Coastal Kingdom. **The world you
+choose then follows you through the flow — it becomes the blurred background of the next three screens**
+(pick-story, language, details).
 
-**3. Pick your story** — 2-column grid of glass cards, each a circular thumbnail + uppercase title.
-Stories: The Lost Kitten, The Tired Dragon, Great Mountain Chase, Big Mountain Rescue.
+**3. Pick your story** — 2-column grid of glass cards, each a circular thumbnail + uppercase title, over
+your chosen world's blurred scene. Stories: The Lost Kitten, The Tired Dragon, Great Mountain Chase, Big
+Mountain Rescue.
 
-**4. Language selection** — a full-height list of glass card rows that fill the screen (no separate
-button): **tapping a language takes you straight to the details screen**. The row you point at / press
-lights up in a Hero-red gradient. Options: Hindi, English, Tamil, Telugu, Kannada, Malayalam, Bengali.
+**4. Language selection** — a full-height list of glass card rows (over the chosen world's scene) that fill
+the screen (no separate button): **tapping a language takes you straight to the details screen**. The row
+you point at / press lights up in a Hero-red gradient. Options: Hindi, English, Tamil, Telugu, Kannada,
+Malayalam, Bengali.
 
-**5. Details + selfie — "Every Adventure Needs Heroes"** — a full-width dashed "Upload or click selfie"
-dropzone above required inputs (parent name,
+**5. Details + selfie — "Every Adventure Needs Heroes"** — over your chosen world's blurred scene, a
+full-width dashed "Upload or click selfie" dropzone above required inputs (parent name,
 child's name, phone), helper text "verification code sent on WhatsApp", submit "Send OTP". Tapping the
 selfie opens a choice: **Take a selfie** or **Upload a photo**. Both start with the same instruction
 screen (do/don't examples + tips + a button to open the camera or picker — no timer), then the camera opens a

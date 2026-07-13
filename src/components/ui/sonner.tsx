@@ -29,8 +29,8 @@ export function Toaster() {
         unstyled: true,
         classNames: {
           toast:
-            "flex w-full items-center gap-2.5 rounded-pill border border-white/12 bg-white/10 px-4 py-3 text-cloud shadow-lift backdrop-blur-[14px]",
-          title: "text-[0.9rem] leading-snug font-medium text-cloud",
+            "flex w-full items-center gap-2.5 rounded-pill border border-white/12 bg-white/10 px-4 py-3 text-white shadow-lift backdrop-blur-[14px]",
+          title: "text-[0.9rem] leading-snug font-medium text-white",
           description: "text-[0.8rem] leading-snug text-mist",
           icon: "flex shrink-0 items-center",
           error: "ring-1 ring-hero-red/60 ring-inset",

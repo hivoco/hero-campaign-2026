@@ -1,14 +1,22 @@
 import Image from "next/image";
 
 import { DetailsForm } from "@/components/details-form";
+import { getWorldBySlug } from "@/lib/worlds";
 
-export default function DetailsPage() {
+export default async function DetailsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ world?: string }>;
+}) {
+  const { world: worldSlug } = await searchParams;
+  const world = getWorldBySlug(worldSlug);
+
   return (
     <main className="relative mx-auto flex h-dvh w-full max-w-[440px] flex-col overflow-hidden bg-ink shadow-[0_0_60px_rgba(0,0,0,0.6)]">
-      {/* Full-bleed background — the mountain world, darkened + blurred. */}
+      {/* Full-bleed background — the chosen world scene, darkened + blurred. */}
       <div aria-hidden className="absolute inset-0">
         <Image
-          src="/worlds/mountain-peaks.png"
+          src={world.image}
           alt=""
           fill
           preload
@@ -33,15 +41,14 @@ export default function DetailsPage() {
           width={536}
           height={197}
           preload
-          style={{ height: "auto" }}
-          className="mx-auto w-[8.25rem] animate-rise drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]"
+          className="mx-auto h-11 w-auto animate-rise "
         />
 
-        <h1 className="display mt-5 text-[2rem] leading-[0.9] text-cloud drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] animate-rise [animation-delay:100ms]">
+        <h1 className="display mt-5 text-center text-[1.85rem] font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080] animate-rise [animation-delay:100ms]">
           Every Adventure Needs Heroes
         </h1>
 
-        <p className="mt-3 text-[0.95rem] text-center leading-[1.45] font-semibold text-cloud drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] animate-rise [animation-delay:160ms]">
+        <p className="mt-1.5 text-[13px] text-center leading-snug font-bold text-white [text-shadow:0px_3px_6px_#00000080] animate-rise [animation-delay:160ms]">
           Upload or click a selfie with your little one to begin the journey.
           Fill in a few details below &amp; let&apos;s bring your story to life.
         </p>

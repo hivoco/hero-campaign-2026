@@ -21,7 +21,7 @@ export default function ThankYouPage() {
           fill
           preload
           sizes="440px"
-          className="object-cover object-center"
+          className="object-cover object-center h-10 w-auto"
         />
         {/* Legibility scrims — top for the chrome, bottom for the copy. */}
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/55 to-transparent" />
@@ -30,12 +30,12 @@ export default function ThankYouPage() {
 
       {/* Foreground */}
       <div className="relative z-10 flex h-full flex-col px-5 pt-6 pb-8">
-        <header className="flex items-start justify-between">
+        <header className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-pill border border-black/5 bg-white/95 px-4 py-2 text-[0.85rem] font-medium text-ink shadow-[0_4px_14px_rgba(0,0,0,0.25)] backdrop-blur-sm transition duration-200 ease-out-soft hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_8px_22px_rgba(0,0,0,0.3)] focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 focus-visible:outline-none active:translate-y-0"
+            className="flex items-center gap-0.5 rounded-pill border border-black/5 bg-white/95 px-2 py-1.5 text-[10px] font-bold leading-none text-ink shadow-[0_4px_14px_rgba(0,0,0,0.25)] backdrop-blur-sm transition duration-200 ease-out-soft hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_8px_22px_rgba(0,0,0,0.3)] focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 focus-visible:outline-none active:translate-y-0"
           >
-            <ArrowLeft aria-hidden className="size-4" strokeWidth={2.2} />
+            <ArrowLeft aria-hidden className="size-3" strokeWidth={3} />
             Back to Home
           </Link>
           <Image
@@ -52,18 +52,18 @@ export default function ThankYouPage() {
         {/* Campaign tagline plate — wide, centered, big italic display. This is
             the screen's primary heading (every other screen has an <h1>); the two
             lines are block spans so the plate reads as one heading to a SR. */}
-        <h1 className="glass mx-auto mt-5 w-[22rem] max-w-full rounded-2xl px-5 py-4 text-center animate-rise">
-          <span className="display block text-[1.95rem] leading-[0.95] text-cloud italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+        <h1 className="mx-auto mt-5 w-[22rem] max-w-full rounded-xl border border-white/25 bg-black/20 px-5 py-4 text-center backdrop-blur-xs backdrop-saturate-[1.4] animate-rise">
+          <span className="display block text-[1.95rem] leading-[0.95] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
             Hero Ka Scooter
           </span>
-          <span className="display block text-[2.6rem] leading-[0.85] text-cloud italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+          <span className="display block text-[2.6rem] leading-[0.85] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
             Scooter Ka Hero
           </span>
         </h1>
 
         {/* Confirmation + wordmark. */}
         <div className="mt-auto flex flex-col items-center text-center">
-          <p className="max-w-[19rem] text-[1.05rem] leading-[1.4] font-bold text-cloud drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] animate-rise [animation-delay:120ms]">
+          <p className="max-w-[19rem] text-base text-center leading-none font-bold text-white [text-shadow:0px_4px_4px_#00000099] animate-rise [animation-delay:120ms]">
             Your Hero Destini adventure is being created just for you. It will
             arrive on your WhatsApp soon.
           </p>
@@ -73,7 +73,7 @@ export default function ThankYouPage() {
             width={324}
             height={61}
             style={{ height: "auto" }}
-            className="mt-6 w-[9.5rem] drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] animate-rise [animation-delay:200ms]"
+            className="mt-4 h-8 w-auto  animate-rise [animation-delay:200ms]"
           />
         </div>
       </div>

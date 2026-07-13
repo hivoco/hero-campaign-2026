@@ -314,7 +314,7 @@ export function CaptureOverlay({
           type="button"
           onClick={onClose}
           aria-label="Close camera"
-          className="absolute top-4 right-4 z-20 flex size-11 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
+          className="absolute top-9 right-4 z-20 flex size-11 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
         >
           <X aria-hidden className="size-5" />
         </button>
@@ -487,14 +487,16 @@ function IntroStep({
 
   return (
     <div className="flex h-full flex-col px-6 pt-16 pb-8">
-      {/* Top progress bar — present in both modes. */}
+      {/* Top progress bar — present in both modes. Inset from the top + sides,
+          20px-rounded with a solid #3D3D3D (empty) track and a rounded white fill
+          (design ref). Width-driven (not scaleX) so the fill keeps a clean cap. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-1 overflow-hidden bg-white/15"
+        className="absolute inset-x-6 top-5 h-2.5 rounded-panel bg-[#3D3D3D]"
       >
         <div
-          className="h-full origin-left bg-white"
-          style={{ transform: `scaleX(${progress})` }}
+          className="h-full rounded-panel bg-white"
+          style={{ width: `${progress * 100}%` }}
         />
       </div>
 

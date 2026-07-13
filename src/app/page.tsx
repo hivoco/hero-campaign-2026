@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -12,7 +13,7 @@ export default function LandingPage() {
         fill
         preload
         sizes="480px"
-        className="object-cover object-center"
+        className="object-cover object-center "
       />
 
       {/* Legibility scrims — dark at the very top and bottom, clear in the
@@ -27,9 +28,7 @@ export default function LandingPage() {
         {/* Accessible page heading — the visible welcome copy is set in the
             condensed display face, so a plain-text h1 carries the landmark
             for screen readers and SEO without altering the layout. */}
-        <h1 className="sr-only">
-          Welcome to the Hero Destini fantasy world
-        </h1>
+        <h1 className="sr-only">Welcome to the Hero Destini fantasy world</h1>
 
         {/* Brand */}
         <Image
@@ -38,13 +37,12 @@ export default function LandingPage() {
           width={536}
           height={197}
           preload
-          style={{ height: "auto" }}
-          className="mx-auto w-[9.25rem] animate-rise drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]"
+          className="mx-auto h-17 w-auto animate-rise"
         />
 
         {/* Welcome message */}
-        <div className="glass mt-5 rounded-panel px-6 py-4 animate-rise [animation-delay:120ms]">
-          <p className="display mx-auto max-w-[22rem] text-center text-[0.84rem] leading-[1.22] text-cloud [text-wrap:balance]">
+        <div className="glass mt-5 rounded-panel px-2.5 py-4 animate-rise [animation-delay:120ms] bg-black/25!">
+          <p className="display mx-auto text-center text-[1.2375rem] font-bold leading-none tracking-normal text-white [text-shadow:0px_3.78px_3.78px_#00000080]">
             Welcome to the Hero Destini fantasy world. Create your very own
             personalised dragon story with your child.
           </p>
@@ -60,29 +58,23 @@ export default function LandingPage() {
             alt="Hero Destini — available in 110cc and 125cc"
             width={324}
             height={61}
+            preload
             style={{ height: "auto" }}
-            className="w-[11.5rem] drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+            className="h-7.5 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
           />
         </div>
 
         {/* Primary call to action */}
         <Link
           href="/world-selection"
-          className="glass group mt-5 flex h-14 items-center justify-center rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft animate-rise [animation-delay:340ms] hover:-translate-y-0.5 hover:bg-[var(--glass-fill-strong)] hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 active:translate-y-0 active:scale-[0.99]"
+          className="glass group mt-2 flex h-14 items-center justify-center rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-white transition duration-200 ease-out-soft animate-rise [animation-delay:340ms] hover:-translate-y-0.5 hover:bg-[var(--glass-fill-strong)] hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 active:translate-y-0 active:scale-[0.99]"
         >
           <span>Start Your Adventure</span>
-          <svg
+          <ArrowRight
             aria-hidden
-            viewBox="0 0 24 24"
-            className="ml-2 h-5 w-5 translate-x-0 transition-transform duration-200 ease-out-soft group-hover:translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
+            strokeWidth={2.2}
+            className="ml-2 h-5 w-5 transition-transform duration-200 ease-out-soft group-hover:translate-x-1"
+          />
         </Link>
       </div>
     </main>

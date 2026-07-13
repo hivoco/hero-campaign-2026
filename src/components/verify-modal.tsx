@@ -306,8 +306,8 @@ export function VerifyModal({ onClose }: Props) {
                 "group flex h-14 w-full items-center justify-center rounded-pill text-[1.05rem] font-semibold text-white transition duration-200 ease-out-soft",
                 "focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:outline-none",
                 canSubmit
-                  ? "bg-hero-red shadow-[0_10px_24px_rgba(237,28,36,0.35)] hover:bg-hero-red-bright hover:shadow-[0_12px_28px_rgba(237,28,36,0.45)] active:scale-[0.99]"
-                  : "cursor-not-allowed bg-hero-red/35",
+                  ? "bg-[#E95063] shadow-[0_10px_24px_rgba(233,80,99,0.35)] hover:bg-[#ED6475] hover:shadow-[0_12px_28px_rgba(233,80,99,0.45)] active:scale-[0.99]"
+                  : "cursor-not-allowed bg-[#E95063]/35",
               )}
             >
               Submit &amp; Generate
