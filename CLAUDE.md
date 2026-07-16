@@ -149,7 +149,9 @@ closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update 
 **Verify before saying done**: `npm run lint` and `npx tsc --noEmit` must be clean. Visual-check with a
 headless-Chrome screenshot at window **900×940** (shows the centered 440px frame correctly). Narrow
 windows (≤440) clip the frame — that's a headless viewport quirk, not a real bug (the `width=device-width`
-viewport is correct). Dev server runs on :3000, or :3002 when :3000 is busy.
+viewport is correct). Ports are pinned in `package.json`: dev on **:3000** (`next dev -p 3000`),
+production `npm start` on **:6012**. The admin dashboard uses :8100 (dev) / :6013 (prod), so both
+apps can run side by side.
 
 ---
 

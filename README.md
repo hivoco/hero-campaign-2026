@@ -26,7 +26,7 @@ generates a personalised "dragon story" film for their child. Tone: cinematic, m
 ## Getting started
 
 ```bash
-npm run dev      # start the dev server → http://localhost:3000
+npm run dev      # start the dev server → http://localhost:3000  (npm start → :6012)
 npm run build    # production build
 npm run start    # serve the production build
 npm run lint     # eslint
