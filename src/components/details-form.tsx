@@ -3,12 +3,19 @@
 import * as React from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Camera, Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import { pressable } from "@/lib/pressable";
-import { localCheck, reasonLine, uploadSelfie } from "@/lib/selfie-check";
+import {
+  localCheck,
+  reasonLine,
+  uploadSelfie,
+  verdictMessage,
+  type SelfieMeta,
+} from "@/lib/selfie-check";
+import { submitVideo, ApiError } from "@/lib/api";
 import { SelfieSourceSheet } from "@/components/selfie-source-sheet";
 
 // Both overlays mount only on interaction, so code-split them out of the
@@ -22,7 +29,7 @@ const VerifyModal = dynamic(
   { ssr: false },
 );
 
-type Selfie = { file: File; url: string };
+type Selfie = { file: File; url: string; meta: SelfieMeta | null };
 /** A photo that failed a gate — its reason + a preview URL so the dropzone can
  *  show the shot the user just picked (not a stale committed one). */
 type UploadReject = { reason: string; url: string };
@@ -47,13 +54,20 @@ const SELFIE_TOAST_ID = "selfie-required";
  * opens the OTP sheet.
  */
 export function DetailsForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [selfie, setSelfie] = React.useState<Selfie | null>(null);
   const [choiceOpen, setChoiceOpen] = React.useState(false);
   const [captureMode, setCaptureMode] = React.useState<
     null | "camera" | "upload"
   >(null);
   const [otpOpen, setOtpOpen] = React.useState(false);
+  // Phone + job id from a successful submit, handed to the OTP sheet.
+  const [otpCtx, setOtpCtx] = React.useState<{ mobile: string; jobId?: number } | null>(
+    null,
+  );
   const [checking, setChecking] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<UploadReject | null>(null);
   // The selfie isn't a native form field, so native validation can't require
   // it. This flips true when the user submits without one (see onSubmit).
@@ -75,14 +89,14 @@ export function DetailsForm() {
     return () => URL.revokeObjectURL(url);
   }, [uploadError]);
 
-  const commitSelfie = (file: File) => {
+  const commitSelfie = (file: File, meta: SelfieMeta | null) => {
     setUploadError(null);
     setSelfieRequired(false);
     toast.dismiss(SELFIE_TOAST_ID);
     // Create the URL here, not inside the updater — updaters must be pure and
     // run twice under StrictMode (which would leak a blob). The [selfie] effect
     // revokes the previous URL when this replaces it.
-    setSelfie({ file, url: URL.createObjectURL(file) });
+    setSelfie({ file, url: URL.createObjectURL(file), meta });
   };
 
   const openPicker = () => fileInputRef.current?.click();
@@ -112,12 +126,83 @@ export function DetailsForm() {
       }
       const server = await uploadSelfie(file);
       if (!server.ok) {
-        rejectSelfie(file, reasonLine(server.reasons));
+        rejectSelfie(file, verdictMessage(server));
         return;
       }
-      commitSelfie(file);
+      commitSelfie(file, server.meta ?? null);
     } finally {
       setChecking(false);
+    }
+  };
+
+  // Send OTP → POST /video/submit. The browser has already run native
+  // validation on the text fields (the button is a submit), so this fires only
+  // once they're valid; the selfie is the one non-native requirement, enforced
+  // here. Submit sends the WhatsApp OTP and creates the job; on "otp_sent" we
+  // open the verify sheet, and a returning verified user skips straight to
+  // thank-you. Read the form values synchronously before any await (React
+  // nulls event.currentTarget after the handler returns).
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // A selfie may be mid-validation (checking): selfie is still null but one is
+    // in flight — don't flash a false "missing selfie" error.
+    if (checking || submitting) return;
+    if (!selfie) {
+      selfieButtonRef.current?.focus();
+      // A rejected photo already shows its own banner ("choose another") — don't
+      // stack a redundant toast/red border; only nudge when empty.
+      if (!uploadError) {
+        setSelfieRequired(true);
+        toast.error("Add a selfie to continue.", { id: SELFIE_TOAST_ID });
+      }
+      return;
+    }
+
+    const data = new FormData(event.currentTarget);
+    const parentName = String(data.get("name") ?? "").trim();
+    const childName = String(data.get("childName") ?? "").trim();
+    const phone = String(data.get("phone") ?? "").trim();
+
+    setSubmitting(true);
+    try {
+      const res = await submitVideo({
+        mobileNumber: phone,
+        childName,
+        parentName,
+        parentRole: selfie.meta?.parentRole,
+        childRole: selfie.meta?.childRole,
+        worldSlug: searchParams.get("world") ?? "",
+        storySlug: searchParams.get("story") ?? "",
+        langCode: searchParams.get("lang") ?? "",
+        consentAccepted: true,
+        photo: selfie.file,
+        validationToken: selfie.meta?.validationToken,
+        utm: {
+          source: searchParams.get("utm_source") ?? undefined,
+          medium: searchParams.get("utm_medium") ?? undefined,
+          campaign: searchParams.get("utm_campaign") ?? undefined,
+        },
+      });
+
+      if (res.status === "otp_sent") {
+        setOtpCtx({ mobile: phone, jobId: res.job_id });
+        setOtpOpen(true);
+      } else if (res.status === "video_created" || res.status === "verified") {
+        // Already-verified returning user — no OTP step.
+        router.push("/thank-you");
+      } else if (res.status === "pending") {
+        toast(res.message ?? "Your previous video is still being processed.");
+      } else {
+        toast(res.message ?? "Request received.");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof ApiError
+          ? error.message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -128,26 +213,9 @@ export function DetailsForm() {
       <form
         // The button is always enabled: native validation runs on the required
         // text fields first (the browser shows its own warnings), so this only
-        // fires once they pass. The selfie isn't a native field, so we enforce
-        // it here — a missing one reddens the dropzone and fires a toast (an
-        // overlay, so no layout shift), rather than a dead no-op.
-        onSubmit={(event) => {
-          event.preventDefault();
-          // A selfie may be mid-validation (checking): selfie is still null but
-          // one is in flight — don't flash a false "missing selfie" error.
-          if (checking) return;
-          if (!selfie) {
-            selfieButtonRef.current?.focus();
-            // A rejected photo already shows its own banner ("choose another") —
-            // don't stack a redundant toast/red border; only nudge when empty.
-            if (!uploadError) {
-              setSelfieRequired(true);
-              toast.error("Add a selfie to continue.", { id: SELFIE_TOAST_ID });
-            }
-            return;
-          }
-          setOtpOpen(true);
-        }}
+        // fires once they pass. The selfie is the one non-native requirement,
+        // enforced inside handleSubmit, which then POSTs to /video/submit.
+        onSubmit={handleSubmit}
         inert={overlayOpen}
         className="animate-rise mt-5 flex min-h-0 flex-1 flex-col [animation-delay:220ms]"
       >
@@ -156,7 +224,7 @@ export function DetailsForm() {
             re-pick); being a sibling (not nested in the dropzone) its tap can't
             trigger the source sheet or the change badge, and being absolute it
             never reflows the form. */}
-        <div className="relative flex min-h-0 w-full flex-1 flex-col md:max-h-56">
+        <div className="relative flex min-h-0 w-full flex-1 flex-col">
           <button
             ref={selfieButtonRef}
             type="button"
@@ -213,7 +281,7 @@ export function DetailsForm() {
                 <span className="flex size-12 items-center justify-center rounded-full bg-white text-ink shadow-[0_4px_14px_rgba(0,0,0,0.35)] transition-transform duration-200 ease-out-soft group-hover:scale-105">
                   <Camera aria-hidden className="size-5" strokeWidth={2} />
                 </span>
-                <span className="text-[0.78rem] font-medium tracking-[0.14em] text-white uppercase">
+                <span className="text-[0.78rem] font-medium tracking-[0.14em] text-cloud uppercase">
                   Upload or click selfie
                 </span>
               </span>
@@ -242,7 +310,7 @@ export function DetailsForm() {
                   className="size-5 shrink-0 text-hero-red-bright"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[0.82rem] leading-snug text-white">
+                  <span className="block text-[0.82rem] leading-snug text-cloud">
                     {uploadError.reason}
                   </span>
                   <span className="mt-0.5 block text-[0.8rem] font-semibold text-hero-red-bright">
@@ -264,7 +332,7 @@ export function DetailsForm() {
 
         {/* Details — validation is native HTML only (required / pattern); the
             browser shows its own messages on submit. */}
-        <div className="mt-5 flex shrink-0 flex-col gap-2">
+        <div className="mt-5 flex shrink-0 flex-col gap-3">
           <Field
             label="Your name"
             name="name"
@@ -297,7 +365,7 @@ export function DetailsForm() {
         </div>
 
         {/* WhatsApp helper */}
-        <p className="mt-2.5 flex items-center gap-0.5 px-1 text-[0.8rem] text-mist">
+        <p className="mt-2.5 flex items-center gap-1.5 px-1 text-[0.8rem] text-mist">
           <span>*Your verification code will be sent on</span>
           <Image
             src="/whatsapp.png"
@@ -309,27 +377,43 @@ export function DetailsForm() {
           <span>Whatsapp.</span>
         </p>
 
-        {/* Primary CTA — always enabled so a press on an incomplete form
-            triggers native field warnings (and the missing-selfie error above),
-            never a dead no-op. A translucent dark-glass pill (design reference),
-            deepening on hover. */}
+        {/* Primary CTA — enabled so a press on an incomplete form triggers
+            native field warnings (and the missing-selfie error above), never a
+            dead no-op. Disabled only while the submit request is in flight to
+            block a double-send. Hero red at all times. */}
         <button
           type="submit"
+          disabled={submitting}
+          aria-busy={submitting}
           className={cn(
-            pressable,
-            "group mt-4 mb-1 flex h-14 shrink-0 items-center justify-center rounded-pill border border-white/25 bg-[#424242]/25 px-6 text-[1.05rem] font-semibold tracking-wide text-white backdrop-blur-xs backdrop-saturate-[1.4] transition duration-200 ease-out-soft",
-            "hover:-translate-y-0.5 hover:bg-[#424242]/40 hover:shadow-lift active:translate-y-0",
-            // Focus as an `outline` (drawn outside the border box) — matches
-            // selfie-source-sheet.
+            "glass group relative mt-4 mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft",
+            "hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
+            "disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none",
+            // `.glass` sets its own box-shadow and, being defined after the
+            // utilities, clobbers a box-shadow `ring`, so the focus ring never
+            // paints — use an `outline` instead (matches selfie-source-sheet).
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
           )}
         >
-          <span className="flex items-center">
-            Send OTP
-            <ArrowRight
-              aria-hidden
-              className="ml-2 size-5 transition-transform duration-200 ease-out-soft group-hover:translate-x-1"
-            />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-pill bg-hero-red/90 ring-1 ring-hero-red-bright ring-inset transition-colors duration-200 group-hover:bg-hero-red"
+          />
+          <span className="relative z-10 flex items-center">
+            {submitting ? (
+              <>
+                Sending
+                <Loader2 aria-hidden className="ml-2 size-5 animate-spin" />
+              </>
+            ) : (
+              <>
+                Send OTP
+                <ArrowRight
+                  aria-hidden
+                  className="ml-2 size-5 transition-transform duration-200 ease-out-soft group-hover:translate-x-1"
+                />
+              </>
+            )}
           </span>
         </button>
       </form>
@@ -363,9 +447,9 @@ export function DetailsForm() {
       {captureMode && (
         <CaptureOverlay
           mode={captureMode}
-          onCommit={(file) => {
+          onCommit={(file, meta) => {
             setCaptureMode(null);
-            commitSelfie(file);
+            commitSelfie(file, meta);
           }}
           onClose={() => setCaptureMode(null)}
           onUploadFallback={() => {
@@ -375,7 +459,12 @@ export function DetailsForm() {
         />
       )}
 
-      {otpOpen && <VerifyModal onClose={() => setOtpOpen(false)} />}
+      {otpOpen && (
+        <VerifyModal
+          mobile={otpCtx?.mobile ?? ""}
+          onClose={() => setOtpOpen(false)}
+        />
+      )}
     </>
   );
 }
@@ -395,9 +484,9 @@ function Field({ label, className, ...props }: FieldProps) {
       <input
         id={id}
         className={cn(
-          "w-full rounded-lg border border-white/25 bg-[#424242]/25 px-5 py-3 text-[1rem] text-white backdrop-blur-xs backdrop-saturate-[1.4] transition duration-200 ease-out-soft outline-none placeholder:text-white/50",
-          // Focus as an `outline` (not a box-shadow `ring`) — matches the CTA
-          // + selfie-source-sheet.
+          "glass h-14 w-full rounded-input px-5 text-[1rem] text-cloud transition duration-200 ease-out-soft outline-none placeholder:text-mist",
+          // Outline, not `ring`: `.glass`'s own box-shadow clobbers a box-shadow
+          // ring (see selfie-source-sheet), so the ring would never paint.
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
           className,
         )}

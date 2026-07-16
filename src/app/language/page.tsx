@@ -1,17 +1,15 @@
 import { LanguageSelect } from "@/components/language-select";
-import { getWorldBySlug } from "@/lib/worlds";
 
 export default async function LanguagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ world?: string }>;
+  searchParams: Promise<{ world?: string; story?: string }>;
 }) {
-  const { world: worldSlug } = await searchParams;
-  const world = getWorldBySlug(worldSlug);
-
+  // Carry the world + story chosen earlier forward to /details with the language.
+  const { world, story } = await searchParams;
   return (
     <main>
-      <LanguageSelect world={world} />
+      <LanguageSelect world={world} story={story} />
     </main>
   );
 }

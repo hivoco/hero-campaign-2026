@@ -2,17 +2,21 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { consents, eligibilityDeclaration } from "@/lib/consents";
 import { verifySchema } from "@/lib/verify-schema";
+import { verifyOtp, resendOtp, ApiError } from "@/lib/api";
 import { DETAILS_SCROLL_ID, useScrollLock } from "@/hooks/use-scroll-lock";
 
 const OTP_LENGTH = 6;
 
 type Props = {
   onClose: () => void;
+  /** The phone number the OTP was sent to (from the submit response context). */
+  mobile: string;
 };
 
 /**
@@ -25,11 +29,12 @@ type Props = {
  * Generate" pill unlocks only once all six digits are entered AND both required
  * consents are checked, then routes to the thank-you screen.
  */
-export function VerifyModal({ onClose }: Props) {
+export function VerifyModal({ onClose, mobile }: Props) {
   const router = useRouter();
   const [digits, setDigits] = React.useState<string[]>(() =>
     Array(OTP_LENGTH).fill(""),
   );
+  const [resending, setResending] = React.useState(false);
   const [checked, setChecked] = React.useState<Record<Consent["id"], boolean>>({
     film: false,
     contact: false,
@@ -181,11 +186,45 @@ export function VerifyModal({ onClose }: Props) {
       ? "Accept the required consents to continue."
       : "";
 
-  const onSubmit = (event: React.FormEvent) => {
+  const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
     setSubmitting(true);
-    router.push("/thank-you");
+    try {
+      const res = await verifyOtp(mobile, otp);
+      if (res.status === "verified") {
+        // Navigating away unmounts this modal — leave `submitting` true so the
+        // button stays busy through the transition.
+        router.push("/thank-you");
+        return;
+      }
+      toast.error(res.message ?? "Couldn't verify that code. Please try again.");
+      setSubmitting(false);
+    } catch (error) {
+      toast.error(
+        error instanceof ApiError
+          ? error.message
+          : "Couldn't verify that code. Please try again.",
+      );
+      setSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resending) return;
+    setResending(true);
+    try {
+      const res = await resendOtp(mobile);
+      toast.success(res.message ?? "A new code is on its way.");
+    } catch (error) {
+      toast.error(
+        error instanceof ApiError
+          ? error.message
+          : "Couldn't resend the code. Please try again.",
+      );
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -261,6 +300,20 @@ export function VerifyModal({ onClose }: Props) {
               ))}
             </div>
 
+            {/* Resend — the OTP is sent by the submit that opened this sheet; a
+                resend re-requests one (backend rate-limits to 3 / 10 min). */}
+            <p className="mt-4 text-center text-[0.85rem] text-ink/60">
+              Didn&apos;t get the code?{" "}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="font-semibold text-hero-red underline-offset-2 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red"
+              >
+                {resending ? "Sending…" : "Resend"}
+              </button>
+            </p>
+
             {/* Terms + eligibility */}
             <p className="mt-6 text-[0.78rem] italic text-ink/60">
               By participating, you agree to the Terms &amp; Conditions of this
@@ -310,11 +363,20 @@ export function VerifyModal({ onClose }: Props) {
                   : "cursor-not-allowed bg-[#E95063]/35",
               )}
             >
-              Submit &amp; Generate
-              <ArrowRight
-                aria-hidden
-                className="ml-2 size-5 transition-transform duration-200 ease-out-soft group-enabled:group-hover:translate-x-1"
-              />
+              {submitting ? (
+                <>
+                  Verifying
+                  <Loader2 aria-hidden className="ml-2 size-5 animate-spin" />
+                </>
+              ) : (
+                <>
+                  Submit &amp; Generate
+                  <ArrowRight
+                    aria-hidden
+                    className="ml-2 size-5 transition-transform duration-200 ease-out-soft group-enabled:group-hover:translate-x-1"
+                  />
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -2,14 +2,16 @@
  * Selfie validation pipeline — the seam both the capture overlay and the
  * upload path run a photo through. Two gates in series:
  *
- *   localCheck(file)   → client-side, free, instant   (this file, Phase-1 mock)
- *   uploadSelfie(file) → server, authoritative        (this file, Phase-1 stub)
+ *   localCheck(file)   → client-side, free, instant   (this file)
+ *   uploadSelfie(file) → server, authoritative        (POST /photo-validation/check_photo)
  *
- * Committing a selfie requires BOTH to pass. Phase 2 swaps only the two
- * function bodies (real face-api on the still + real API POST); the types,
- * REASON_COPY, and every caller stay untouched.
+ * Committing a selfie requires BOTH to pass. The server gate additionally
+ * returns the derived roles + a validation_token (carried on `meta`) that
+ * /video/submit needs, so a passing check hands that metadata back to the
+ * caller to store alongside the committed selfie.
  */
 import { countWellFramedFaces, REQUIRED_FACE_COUNT } from "@/lib/face-gate";
+import { checkPhoto, getPhotoValidationEnabled, ApiError } from "@/lib/api";
 
 export type SelfieReason =
   | "no-face"
@@ -22,6 +24,26 @@ export type SelfieReason =
   | "obscured";
 
 export type SelfieVerdict = { ok: boolean; reasons: SelfieReason[] };
+
+/** Data the server gate derives from a valid selfie — needed by /video/submit. */
+export type SelfieMeta = {
+  validationToken?: string;
+  parentRole?: "father" | "mother";
+  childRole?: "son" | "daughter";
+};
+
+/** Server verdict: a base verdict plus a ready-to-show `message` (the backend's
+ *  human reason) on failure, and `meta` (token + roles) on success. */
+export type ServerVerdict = SelfieVerdict & {
+  message?: string;
+  meta?: SelfieMeta;
+};
+
+/** The line to show for a failed verdict — the server's own message wins,
+ *  otherwise the local reason copy. */
+export function verdictMessage(v: SelfieVerdict & { message?: string }): string {
+  return v.message ?? reasonLine(v.reasons);
+}
 
 /** Human, specific lines — drive the c2 subhead and the upload reject card. */
 export const REASON_COPY: Record<SelfieReason, string> = {
@@ -119,13 +141,52 @@ export async function localCheck(file: File): Promise<SelfieVerdict> {
 }
 
 /**
- * Server gate (authoritative). Phase 1: a stub that resolves after a short
- * delay so the "checking" state reads like a real request. Phase 2: a multipart
- * POST normalised to a SelfieVerdict.
+ * Server gate (authoritative) — POSTs the still to /photo-validation/check_photo.
+ * A valid photo returns the derived roles + a validation_token on `meta` (which
+ * /video/submit requires); a rejected one returns the backend's human `message`.
+ * A network/service error is surfaced as a rejection so an unvalidated selfie is
+ * never committed (the flow stays retryable). The `?selfie=` QA override still
+ * short-circuits it so both branches are demoable without a backend.
  */
-export async function uploadSelfie(file: File): Promise<SelfieVerdict> {
-  void file;
-  await sleep(650);
-  if (mockOverride() === "api-fail") return { ok: false, reasons: ["obscured"] };
-  return { ok: true, reasons: [] };
+export async function uploadSelfie(file: File): Promise<ServerVerdict> {
+  const override = mockOverride();
+  if (override === "api-fail")
+    return { ok: false, reasons: ["obscured"], message: REASON_COPY.obscured };
+  if (override === "pass" || override === "fail") {
+    await sleep(400);
+    return { ok: true, reasons: [], meta: {} };
+  }
+
+  // Admin turned photo validation off → skip the server gate entirely. The
+  // selfie commits with no token/roles, so /video/submit stores NULL roles —
+  // which marks it an unverified photo. The client face gate (localCheck) still ran.
+  if (!(await getPhotoValidationEnabled())) {
+    return { ok: true, reasons: [], meta: {} };
+  }
+
+  try {
+    const result = await checkPhoto(file);
+    if (!result.valid) {
+      return {
+        ok: false,
+        reasons: [],
+        message: result.reason || result.message || reasonLine([]),
+      };
+    }
+    return {
+      ok: true,
+      reasons: [],
+      meta: {
+        validationToken: result.validationToken,
+        parentRole: result.parentRole,
+        childRole: result.childRole,
+      },
+    };
+  } catch (error) {
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : "We couldn't check that photo just now. Please try again.";
+    return { ok: false, reasons: [], message };
+  }
 }

@@ -22,8 +22,9 @@ import {
 } from "@/hooks/use-camera";
 import {
   localCheck,
-  reasonLine,
   uploadSelfie,
+  verdictMessage,
+  type SelfieMeta,
   type SelfieVerdict,
 } from "@/lib/selfie-check";
 import {
@@ -54,8 +55,9 @@ type Props = {
   /** "camera" runs the live capture; "upload" shows the same intro then hands
    *  off to the file picker via onUploadFallback. */
   mode?: "camera" | "upload";
-  /** Called with the passing selfie on "Continue" (parent commits + advances). */
-  onCommit: (file: File) => void;
+  /** Called with the passing selfie + its server metadata (validation token +
+   *  derived roles) on "Continue" (parent commits + advances). */
+  onCommit: (file: File, meta: SelfieMeta | null) => void;
   onClose: () => void;
   /** No-camera escape hatch AND the upload-mode hand-off → parent opens picker. */
   onUploadFallback: () => void;
@@ -77,7 +79,12 @@ export function CaptureOverlay({
 }: Props) {
   const [step, setStep] = React.useState<Step>("intro");
   const [shot, setShot] = React.useState<Shot | null>(null);
-  const [verdict, setVerdict] = React.useState<SelfieVerdict | null>(null);
+  const [verdict, setVerdict] = React.useState<
+    (SelfieVerdict & { message?: string }) | null
+  >(null);
+  // Server metadata (validation token + roles) from a passing check_photo,
+  // handed to onCommit so the details form can submit with it.
+  const [meta, setMeta] = React.useState<SelfieMeta | null>(null);
   const [faceReady, setFaceReady] = React.useState(false);
   const [gateReady, setGateReady] = React.useState(false); // models loaded
   const [gateFailed, setGateFailed] = React.useState(false); // → fall back to live
@@ -214,6 +221,7 @@ export function CaptureOverlay({
         setStep("reject");
         return;
       }
+      setMeta(server.meta ?? null);
       setVerdict({ ok: true, reasons: [] });
       setStep("accept");
     })();
@@ -271,6 +279,7 @@ export function CaptureOverlay({
   const retake = () => {
     setShot(null);
     setVerdict(null);
+    setMeta(null);
     setStartNonce((n) => n + 1);
     setStep("camera");
   };
@@ -354,7 +363,7 @@ export function CaptureOverlay({
             shot={shot}
             verdict={verdict}
             onRetake={retake}
-            onContinue={() => shot && onCommit(shot.file)}
+            onContinue={() => shot && onCommit(shot.file, meta)}
             primaryRef={primaryRef}
           />
         )}
@@ -622,7 +631,7 @@ function ResultStep({
 }: {
   step: "checking" | "reject" | "accept";
   shot: Shot | null;
-  verdict: SelfieVerdict | null;
+  verdict: (SelfieVerdict & { message?: string }) | null;
   onRetake: () => void;
   onContinue: () => void;
   primaryRef: React.RefObject<HTMLButtonElement | null>;
@@ -660,7 +669,7 @@ function ResultStep({
                 Oops! Let&apos;s Try Again
               </h3>
               <p className="mx-auto mt-2 max-w-[19rem] text-[0.9rem] leading-snug text-white/75">
-                {reasonLine(verdict?.reasons ?? [])}
+                {verdictMessage(verdict ?? { ok: false, reasons: [] })}
               </p>
             </>
           )}

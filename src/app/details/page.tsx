@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Suspense } from "react";
 
 import { DetailsForm } from "@/components/details-form";
 import { getWorldBySlug } from "@/lib/worlds";
@@ -53,7 +54,11 @@ export default async function DetailsPage({
           Fill in a few details below &amp; let&apos;s bring your story to life.
         </p>
 
-        <DetailsForm />
+        {/* DetailsForm reads the flow's query params via useSearchParams, so it
+            must sit under a Suspense boundary (Next 16 requirement). */}
+        <Suspense fallback={null}>
+          <DetailsForm />
+        </Suspense>
       </div>
     </main>
   );
