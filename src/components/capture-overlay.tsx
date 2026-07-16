@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -61,6 +62,9 @@ type Props = {
   onClose: () => void;
   /** No-camera escape hatch AND the upload-mode hand-off → parent opens picker. */
   onUploadFallback: () => void;
+  /** Skip the c0 do's/don'ts intro and open the camera immediately (the
+   *  instructions are shown upfront by the guidelines popup now). */
+  skipIntro?: boolean;
 };
 
 /**
@@ -76,8 +80,13 @@ export function CaptureOverlay({
   onCommit,
   onClose,
   onUploadFallback,
+  skipIntro = false,
 }: Props) {
-  const [step, setStep] = React.useState<Step>("intro");
+  // With the do's/don'ts shown upfront, camera mode opens straight into the
+  // live view; upload mode still uses its own path so it keeps the intro.
+  const [step, setStep] = React.useState<Step>(
+    skipIntro && mode === "camera" ? "camera" : "intro",
+  );
   const [shot, setShot] = React.useState<Shot | null>(null);
   const [verdict, setVerdict] = React.useState<
     (SelfieVerdict & { message?: string }) | null
@@ -305,7 +314,10 @@ export function CaptureOverlay({
         : "live-bad"
       : "dashed";
 
-  return (
+  // Portal to <body> so the overlay escapes the /details `#details-scroll`
+  // stacking context (z-10) — otherwise the page's top-left back button (z-30)
+  // paints over this overlay even though it's z-50 within that trapped context.
+  return createPortal(
     <div
       ref={dialogRef}
       role="dialog"
@@ -317,7 +329,7 @@ export function CaptureOverlay({
         {mode === "upload" ? "Add your selfie" : "Take a selfie with your child"}
       </h2>
 
-      <div className="relative flex h-full w-full max-w-[440px] flex-col overflow-hidden bg-black text-white">
+      <div className="relative flex h-full w-full max-w-110 flex-col overflow-hidden bg-black text-white">
         <button
           ref={closeButtonRef}
           type="button"
@@ -368,7 +380,8 @@ export function CaptureOverlay({
           />
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -12,7 +12,7 @@ import { ArrowLeft } from "lucide-react";
  */
 export default function ThankYouPage() {
   return (
-    <main className="relative mx-auto flex h-dvh w-full max-w-[440px] flex-col overflow-hidden bg-ink shadow-[0_0_60px_rgba(0,0,0,0.6)]">
+    <main className="relative mx-auto flex h-dvh w-full max-w-110 flex-col overflow-hidden bg-ink shadow-[0_0_60px_rgba(0,0,0,0.6)]">
       {/* Full-bleed campaign hero. */}
       <div aria-hidden className="absolute inset-0">
         <Image
@@ -24,12 +24,12 @@ export default function ThankYouPage() {
           className="object-cover object-center h-10 w-auto"
         />
         {/* Legibility scrims — top for the chrome, bottom for the copy. */}
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/55 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/85 via-black/45 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-black/55 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-linear-to-t from-black/85 via-black/45 to-transparent" />
       </div>
 
       {/* Foreground */}
-      <div className="relative z-10 flex h-full flex-col px-5 pt-6 pb-8">
+      <div className="relative z-10 flex h-full flex-col px-4 pt-6 pb-8 [@media(max-height:850px)]:pt-2.5">
         <header className="flex items-center justify-between">
           <Link
             href="/"
@@ -45,25 +45,25 @@ export default function ThankYouPage() {
             height={197}
             preload
             style={{ height: "auto" }}
-            className="w-[5.5rem] drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+            className="w-22"
           />
         </header>
 
         {/* Campaign tagline plate — wide, centered, big italic display. This is
             the screen's primary heading (every other screen has an <h1>); the two
             lines are block spans so the plate reads as one heading to a SR. */}
-        <h1 className="mx-auto mt-5 w-[22rem] max-w-full rounded-xl border border-white/25 bg-black/20 px-5 py-4 text-center backdrop-blur-xs backdrop-saturate-[1.4] animate-rise">
-          <span className="display block text-[1.95rem] leading-[0.95] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+        <h1 className="mx-auto mt-5 w-88 max-w-full rounded-xl border border-white/25 bg-black/20 px-4 py-4 text-center backdrop-blur-xs backdrop-saturate-[1.4] animate-rise [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:py-2.5">
+          <span className="display block text-[1.95rem] leading-[0.95] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[1.5rem]">
             Hero Ka Scooter
           </span>
-          <span className="display block text-[2.6rem] leading-[0.85] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+          <span className="display block text-[2.6rem] leading-[0.85] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[2rem]">
             Scooter Ka Hero
           </span>
         </h1>
 
         {/* Confirmation + wordmark. */}
         <div className="mt-auto flex flex-col items-center text-center">
-          <p className="max-w-[19rem] text-base text-center leading-none font-bold text-white [text-shadow:0px_4px_4px_#00000099] animate-rise [animation-delay:120ms]">
+          <p className="w-full text-base text-center leading-none font-bold text-white [text-shadow:0px_4px_4px_#00000099] animate-rise [animation-delay:120ms]">
             Your Hero Destini adventure is being created just for you. It will
             arrive on your WhatsApp soon.
           </p>
@@ -72,8 +72,8 @@ export default function ThankYouPage() {
             alt="Hero Destini — available in 110cc and 125cc"
             width={324}
             height={61}
-            style={{ height: "auto" }}
-            className="mt-4 h-8 w-auto  animate-rise [animation-delay:200ms]"
+            
+            className="mt-4 h-5 w-auto animate-rise [animation-delay:200ms]"
           />
         </div>
       </div>

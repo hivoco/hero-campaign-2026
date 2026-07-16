@@ -17,7 +17,7 @@
 
 ## Current status & handoff (read this first)
 
-A campaign flow of full-screen, phone-width (`max-w-[440px]`) screens. Built & verified so far:
+A campaign flow of full-screen, phone-width (`max-w-110`) screens. Built & verified so far:
 
 | Route | Screen | Notes |
 |-------|--------|-------|
@@ -160,7 +160,11 @@ viewport is correct). Dev server runs on :3000, or :3002 when :3000 is busy.
 - **React 19** — Server Components, Actions, `useOptimistic`, `use()`. Prefer the modern primitives.
 - **TypeScript** — strict. No `any`. Model your domain with real types.
 - **Tailwind CSS v4** — CSS-first config (`@theme` in `globals.css`, not `tailwind.config.js`).
-  Design tokens live in CSS variables.
+  Design tokens live in CSS variables. **Use the v4 canonical scale, not arbitrary brackets, whenever a
+  canonical class exists**: `max-w-110` (not `max-w-[440px]`), `p-2.5` (not `p-[10px]`), `rounded-xl`
+  (12px), `rounded-md` (6px), `w-33` (8.25rem), `bg-white/6`, `bg-linear-to-*` (not `bg-gradient-to-*`).
+  The numeric scale is px/4 (so 440px → 110, 180px → 45). Arbitrary brackets are only for genuinely
+  off-scale values (percentages, `clamp()`, custom shadows, odd rem font sizes).
 - **`src/` directory**, `@/*` import alias.
 
 ---
@@ -191,7 +195,7 @@ reinvent them or hardcode values.** Extend the theme when something genuinely ne
 **`ease-out-soft`** utility (the `--ease-out-soft` token — the whole app was migrated off the arbitrary
 `ease-[var(--ease-out-soft)]`, so use the bare token). Everything is neutralised under `prefers-reduced-motion`.
 
-**Layout pattern**: each screen is a `max-w-[440px]` phone frame, centered with a dark `ink` surround on
+**Layout pattern**: each screen is a `max-w-110` phone frame, centered with a dark `ink` surround on
 desktop, full-bleed on mobile. Full-bleed `next/image` background + a top/bottom legibility scrim, with
 foreground content in a `flex-col` above it.
 

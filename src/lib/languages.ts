@@ -7,11 +7,14 @@ export type Language = {
 
 /** The seven languages offered on the Language Selection screen. */
 export const languages: Language[] = [
-  { code: "hi", label: "Hindi" },
-  { code: "en", label: "English" },
-  { code: "ta", label: "Tamil" },
-  { code: "te", label: "Telugu" },
-  { code: "kn", label: "Kannada" },
-  { code: "ml", label: "Malayalam" },
-  { code: "bn", label: "Bengali" },
+  { code: "hindi", label: "Hindi" },
+  { code: "english", label: "English" },
+  { code: "tamil", label: "Tamil" },
+  { code: "telugu", label: "Telugu" },
+  { code: "kannada", label: "Kannada" },
+  { code: "malayalam", label: "Malayalam" },
+  { code: "bengali", label: "Bengali" },
+  { code: "marathi", label: "Marathi" },
+  { code: "gujrati", label: "Gujrati" },
 ];
+  

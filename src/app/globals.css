@@ -64,12 +64,46 @@ body {
   backdrop-filter: blur(var(--glass-blur)) saturate(140%);
 }
 
+.glass-story-small-card {
+  background: rgb(255 255 255 / 0.2);
+  /* border: 1px solid var(--glass-border); */
+  backdrop-filter: blur(0.1px) saturate(140%);
+}
+
+
+.glass-story-small-card {
+  background: rgba(255, 255, 255, 0.2);
+
+  /* Frost: 2.87 → blur value */
+  backdrop-filter: blur(50px) saturate(130%);
+  -webkit-backdrop-filter: blur(50px) saturate(130%);
+
+  /* Light: -45° 80% → bright top-left, dim bottom-right */
+  box-shadow:
+    inset 0  1px 0 rgba(255, 255, 255, 0.60),  /* top light edge */
+    inset 0 -1px 0 rgba(255, 255, 255, 0.10),  /* bottom inner rim */
+    0 8px 32px rgba(0, 0, 0, 0.12),            /* soft outer shadow */
+    0  2px  8px rgba(0, 0, 0, 0.08); 
+
+  /* Depth: 14.37 → outer shadow depth */
+  
+  
+}
 
 
 /* Display headings: condensed, heavy, tight — the campaign's voice. */
 .display {
   font-family: var(--font-display);
   font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+/* True Bebas Neue Bold (local .otf) — for the story card titles. */
+.display-bold {
+  font-family: var(--font-display-bold), var(--font-display);
+  font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 0.98;
   text-transform: uppercase;
@@ -110,12 +144,39 @@ body {
   }
 }
 
+/* Exit choreography — backdrop fades out, the sheet slides back down. */
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-down {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
 .animate-fade {
   animation: fade 0.25s var(--ease-out-soft) both;
 }
 
 .animate-sheet-up {
   animation: sheet-up 0.4s var(--ease-out-soft) both;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.28s var(--ease-out-soft) both;
+}
+
+.animate-sheet-down {
+  animation: sheet-down 0.28s var(--ease-out-soft) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

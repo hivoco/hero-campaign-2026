@@ -1,15 +1,15 @@
+import { Suspense } from "react";
+
 import { LanguageSelect } from "@/components/language-select";
 
-export default async function LanguagePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ world?: string; story?: string }>;
-}) {
-  // Carry the world + story chosen earlier forward to /details with the language.
-  const { world, story } = await searchParams;
+export default function LanguagePage() {
   return (
     <main>
-      <LanguageSelect world={world} story={story} />
+      {/* LanguageSelect reads the `?lang=` deep-link via useSearchParams, so it
+          must sit under a Suspense boundary (Next 16 requirement). */}
+      <Suspense fallback={null}>
+        <LanguageSelect />
+      </Suspense>
     </main>
   );
 }

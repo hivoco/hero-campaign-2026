@@ -31,7 +31,7 @@ export function WorldCarousel({ worlds }: { worlds: World[] }) {
   }, [api]);
 
   return (
-    <div className="relative mx-auto flex h-dvh w-full max-w-[440px] flex-col overflow-hidden bg-ink shadow-[0_0_60px_rgba(0,0,0,0.6)]">
+    <div className="relative mx-auto flex h-dvh w-full max-w-110 flex-col overflow-hidden bg-ink shadow-[0_0_60px_rgba(0,0,0,0.6)]">
       {/* Full-bleed background — the active world's scene, blurred + darkened.
           Crossfades as you swipe between worlds. */}
       <div aria-hidden className="absolute inset-0">
@@ -53,7 +53,7 @@ export function WorldCarousel({ worlds }: { worlds: World[] }) {
       </div>
 
       {/* Foreground */}
-      <div className="relative z-10 flex flex-1 flex-col px-4 pt-9 pb-8">
+      <div className="relative z-10 flex flex-1 flex-col px-4 pt-9 pb-8 [@media(max-height:850px)]:pt-2.5">
         <Image
           src="/hero-logo.png"
           alt="Hero"

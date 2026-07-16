@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Camera, ImageUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -21,6 +22,8 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const firstRef = React.useRef<HTMLButtonElement | null>(null);
   const titleId = React.useId();
+  // While closing, the sheet plays its slide-down/fade-out exit, then unmounts.
+  const [closing, setClosing] = React.useState(false);
 
   // Freeze the /details scroll container so it can't scroll behind the sheet.
   useScrollLock(DETAILS_SCROLL_ID);
@@ -30,13 +33,22 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
     onCloseRef.current = onClose;
   });
 
+  // Play the exit animation, then hand control back to the parent (which
+  // unmounts us). Guarded so a double-dismiss can't stack two timers.
+  const closeTimerRef = React.useRef<number | null>(null);
+  const requestClose = React.useCallback(() => {
+    if (closeTimerRef.current !== null) return;
+    setClosing(true);
+    closeTimerRef.current = window.setTimeout(() => onCloseRef.current(), 280);
+  }, []);
+
   React.useEffect(() => {
     const restore = document.activeElement as HTMLElement | null;
     const focusTimer = window.setTimeout(() => firstRef.current?.focus(), 60);
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onCloseRef.current();
+        requestClose();
         return;
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
@@ -59,12 +71,16 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
     document.addEventListener("keydown", onKeyDown);
     return () => {
       window.clearTimeout(focusTimer);
+      if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
       document.removeEventListener("keydown", onKeyDown);
       restore?.focus?.();
     };
-  }, []);
+  }, [requestClose]);
 
-  return (
+  // Portal to <body> so the overlay escapes the /details `#details-scroll`
+  // stacking context (z-10) — otherwise the page's top-left back button (z-30)
+  // paints over this sheet even though it's z-50 within that trapped context.
+  return createPortal(
     <div
       ref={dialogRef}
       role="dialog"
@@ -76,12 +92,23 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
         type="button"
         aria-label="Close"
         tabIndex={-1}
-        onClick={onClose}
-        className="animate-fade absolute inset-0 cursor-default bg-ink/55 backdrop-blur-md"
+        onClick={requestClose}
+        className={cn(
+          "absolute inset-0 cursor-default bg-ink/55 backdrop-blur-md",
+          closing ? "animate-fade-out" : "animate-fade",
+        )}
       />
 
-      <div className="relative flex h-full w-full max-w-[440px] flex-col justify-end">
-        <div className="animate-sheet-up rounded-t-sheet border-t border-white/10 bg-ink-soft/95 px-5 pt-3 pb-7 shadow-[0_-16px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+      {/* pointer-events-none so clicks in the empty space above the sheet fall
+          through to the backdrop button (which dismisses); the sheet itself
+          re-enables pointer events. */}
+      <div className="pointer-events-none relative flex h-full w-full max-w-110 flex-col justify-end">
+        <div
+          className={cn(
+            "pointer-events-auto rounded-t-sheet border-t border-white/10 bg-ink-soft/95 px-4 pt-3 pb-7 shadow-[0_-16px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl",
+            closing ? "animate-sheet-down" : "animate-sheet-up",
+          )}
+        >
           <div className="mx-auto mt-1 h-1.5 w-10 rounded-full bg-white/20" />
 
           <h2
@@ -109,17 +136,10 @@ export function SelfieSourceSheet({ onTakeSelfie, onUpload, onClose }: Props) {
               onClick={onUpload}
             />
           </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-4 h-11 w-full rounded-pill text-[0.95rem] font-medium text-mist transition hover:text-white focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
-          >
-            Cancel
-          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -138,7 +158,7 @@ const SourceRow = React.forwardRef<
       type="button"
       onClick={onClick}
       className={cn(
-        "glass group flex w-full items-center gap-4 rounded-panel px-5 py-4 text-left transition duration-200 ease-out-soft",
+        "glass group flex w-full items-center gap-4 rounded-panel px-4 py-4 text-left transition duration-200 ease-out-soft",
         "hover:-translate-y-0.5 hover:bg-[var(--glass-fill-strong)] hover:shadow-lift active:translate-y-0",
         // Use a real outline, not `ring`: `.glass` sets its own box-shadow and
         // (being defined after the utilities) would clobber a box-shadow ring.

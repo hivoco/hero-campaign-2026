@@ -2,12 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Loader2, X } from "lucide-react";
+import { ArrowRight, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
-import { consents, eligibilityDeclaration } from "@/lib/consents";
-import { verifySchema } from "@/lib/verify-schema";
 import { verifyOtp, resendOtp, ApiError } from "@/lib/api";
 import { DETAILS_SCROLL_ID, useScrollLock } from "@/hooks/use-scroll-lock";
 
@@ -26,8 +24,8 @@ type Props = {
  * bottom-sheet over the blurred /details screen (the reference "pop-up"). Dense
  * legal consent text reads far better dark-on-white, so this is the one
  * deliberately-light surface in the otherwise dark campaign. The "Submit &
- * Generate" pill unlocks only once all six digits are entered AND both required
- * consents are checked, then routes to the thank-you screen.
+ * Generate" pill unlocks once all six digits are entered (consent is captured
+ * earlier, on the details form), then routes to the thank-you screen.
  */
 export function VerifyModal({ onClose, mobile }: Props) {
   const router = useRouter();
@@ -35,12 +33,6 @@ export function VerifyModal({ onClose, mobile }: Props) {
     Array(OTP_LENGTH).fill(""),
   );
   const [resending, setResending] = React.useState(false);
-  const [checked, setChecked] = React.useState<Record<Consent["id"], boolean>>({
-    film: false,
-    contact: false,
-    marketing: false,
-    likeness: false,
-  });
   const [submitting, setSubmitting] = React.useState(false);
 
   const inputsRef = React.useRef<(HTMLInputElement | null)[]>([]);
@@ -163,28 +155,10 @@ export function VerifyModal({ onClose, mobile }: Props) {
     focusBox(text.length);
   };
 
-  const toggle = (id: Consent["id"]) =>
-    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
-
-  const parsed = React.useMemo(
-    () =>
-      verifySchema.safeParse({
-        otp,
-        consentFilm: checked.film,
-        consentContact: checked.contact,
-        marketingOptIn: checked.marketing,
-        likenessOptIn: checked.likeness,
-      }),
-    [otp, checked],
-  );
-  const canSubmit = parsed.success && !submitting;
+  const canSubmit = /^\d{6}$/.test(otp) && !submitting;
 
   // What's blocking submit — announced so the disabled pill isn't a dead end.
-  const submitHint = !/^\d{6}$/.test(otp)
-    ? "Enter all 6 digits to continue."
-    : !(checked.film && checked.contact)
-      ? "Accept the required consents to continue."
-      : "";
+  const submitHint = !/^\d{6}$/.test(otp) ? "Enter all 6 digits to continue." : "";
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -245,7 +219,7 @@ export function VerifyModal({ onClose, mobile }: Props) {
         className="animate-fade absolute inset-0 cursor-default bg-ink/55 backdrop-blur-md"
       />
 
-      <div className="relative flex h-full w-full max-w-[440px] flex-col justify-end">
+      <div className="relative flex h-full w-full max-w-110 flex-col justify-end">
         <form
           onSubmit={onSubmit}
           className="animate-sheet-up relative flex max-h-[92dvh] flex-col overflow-hidden rounded-t-sheet bg-white text-ink shadow-[0_-16px_50px_rgba(0,0,0,0.55)]"
@@ -313,31 +287,6 @@ export function VerifyModal({ onClose, mobile }: Props) {
                 {resending ? "Sending…" : "Resend"}
               </button>
             </p>
-
-            {/* Terms + eligibility */}
-            <p className="mt-6 text-[0.78rem] italic text-ink/60">
-              By participating, you agree to the Terms &amp; Conditions of this
-              service.
-            </p>
-            <h3 className="mt-4 text-[0.9rem] font-bold text-ink">
-              Eligibility declaration{" "}
-              <span className="font-semibold text-ink/60">(required to proceed)</span>
-            </h3>
-            <p className="mt-1 text-[0.8rem] leading-snug text-ink/70">
-              &ldquo;{eligibilityDeclaration}&rdquo;
-            </p>
-
-            {/* Consent checkboxes */}
-            <div className="mt-4 flex flex-col gap-3.5">
-              {consents.map((consent) => (
-                <ConsentRow
-                  key={consent.id}
-                  consent={consent}
-                  checked={checked[consent.id]}
-                  onToggle={() => toggle(consent.id)}
-                />
-              ))}
-            </div>
           </div>
 
           {/* Pinned submit */}
@@ -382,46 +331,5 @@ export function VerifyModal({ onClose, mobile }: Props) {
         </form>
       </div>
     </div>
-  );
-}
-
-type Consent = (typeof consents)[number];
-
-function ConsentRow({
-  consent,
-  checked,
-  onToggle,
-}: {
-  consent: Consent;
-  checked: boolean;
-  onToggle: () => void;
-}) {
-  const id = React.useId();
-  return (
-    <label htmlFor={id} className="flex cursor-pointer items-start gap-3">
-      <span className="relative mt-px flex shrink-0">
-        <input
-          id={id}
-          type="checkbox"
-          checked={checked}
-          onChange={onToggle}
-          aria-required={consent.required || undefined}
-          className="peer sr-only"
-        />
-        <span
-          aria-hidden
-          className={cn(
-            "flex size-5 items-center justify-center rounded-[0.4rem] border-2 transition duration-150 peer-focus-visible:ring-2 peer-focus-visible:ring-hero-red/40 peer-focus-visible:ring-offset-1",
-            checked ? "border-hero-red bg-hero-red" : "border-ink/25 bg-white",
-          )}
-        >
-          {checked && <Check className="size-3 text-white" strokeWidth={3.5} />}
-        </span>
-      </span>
-      <span className="text-[0.78rem] leading-[1.35] text-ink/75">
-        {consent.required && <span className="font-semibold text-hero-red">*</span>}
-        {consent.text}
-      </span>
-    </label>
   );
 }

@@ -15,7 +15,13 @@ import {
   verdictMessage,
   type SelfieMeta,
 } from "@/lib/selfie-check";
-import { submitVideo, ApiError } from "@/lib/api";
+import { submitVideo, getTcAccepted, ApiError } from "@/lib/api";
+import {
+  getWizard,
+  patchWizard,
+  getStoredSelfie,
+  setStoredSelfie,
+} from "@/lib/wizard";
 import { SelfieSourceSheet } from "@/components/selfie-source-sheet";
 
 // Both overlays mount only on interaction, so code-split them out of the
@@ -26,6 +32,10 @@ const CaptureOverlay = dynamic(
 );
 const VerifyModal = dynamic(
   () => import("@/components/verify-modal").then((m) => m.VerifyModal),
+  { ssr: false },
+);
+const SelfieGuidelines = dynamic(
+  () => import("@/components/selfie-guidelines").then((m) => m.SelfieGuidelines),
   { ssr: false },
 );
 
@@ -57,6 +67,8 @@ export function DetailsForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selfie, setSelfie] = React.useState<Selfie | null>(null);
+  // The do's/don'ts guidelines popup shows first (3s), then the source choice.
+  const [guidelinesOpen, setGuidelinesOpen] = React.useState(false);
   const [choiceOpen, setChoiceOpen] = React.useState(false);
   const [captureMode, setCaptureMode] = React.useState<
     null | "camera" | "upload"
@@ -72,9 +84,60 @@ export function DetailsForm() {
   // The selfie isn't a native form field, so native validation can't require
   // it. This flips true when the user submits without one (see onSubmit).
   const [selfieRequired, setSelfieRequired] = React.useState(false);
+  // T&C consent gates Send OTP. A returning number that already accepted gets
+  // it pre-ticked (server lookup), but they can still untick to withdraw.
+  const [consentChecked, setConsentChecked] = React.useState(false);
+  // The number we last looked up, so typing doesn't refire the request.
+  const tcLookedUpForRef = React.useRef<string | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const selfieButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const formRef = React.useRef<HTMLFormElement | null>(null);
+
+  // Once the number is complete, ask the backend whether it already accepted the
+  // T&C — a returning user gets the box pre-ticked instead of re-reading it.
+  const prefillConsent = React.useCallback(async (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length !== 10 || tcLookedUpForRef.current === digits) return;
+    tcLookedUpForRef.current = digits;
+    if (await getTcAccepted(digits)) setConsentChecked(true);
+  }, []);
+
+  // Coming back to this screen: prefill name/phone from the wizard store, and
+  // restore the selfie (kept in memory) so nothing typed/picked is lost.
+  React.useEffect(() => {
+    const { name, phone } = getWizard();
+    const form = formRef.current;
+    if (form) {
+      const nameEl = form.elements.namedItem("name") as HTMLInputElement | null;
+      const phoneEl = form.elements.namedItem("phone") as HTMLInputElement | null;
+      if (nameEl && name) nameEl.value = name;
+      if (phoneEl && phone) phoneEl.value = phone;
+    }
+    // Async — the box only ticks after the lookup resolves, not during this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (phone) void prefillConsent(phone);
+    const stored = getStoredSelfie();
+    if (stored) {
+      // Restore the persisted selfie on mount (external store → state). The
+      // [selfie] effect owns URL revocation, so this stays leak-safe.
+      setSelfie({
+        file: stored.file,
+        url: URL.createObjectURL(stored.file),
+        meta: stored.meta,
+      });
+    }
+  }, [prefillConsent]);
+
+  // Persist name/phone as the user types (event-delegated on the form).
+  const onFieldInput = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    const target = event.target as HTMLInputElement;
+    if (target.name === "name") patchWizard({ name: target.value });
+    else if (target.name === "phone") {
+      patchWizard({ phone: target.value });
+      void prefillConsent(target.value);
+    }
+  };
 
   // Release the preview object URL when it's replaced or the screen unmounts.
   React.useEffect(() => {
@@ -97,6 +160,8 @@ export function DetailsForm() {
     // run twice under StrictMode (which would leak a blob). The [selfie] effect
     // revokes the previous URL when this replaces it.
     setSelfie({ file, url: URL.createObjectURL(file), meta });
+    // Keep it in the wizard store so it survives navigating back and forward.
+    setStoredSelfie({ file, meta });
   };
 
   const openPicker = () => fileInputRef.current?.click();
@@ -106,6 +171,7 @@ export function DetailsForm() {
   // so what's shown and what's submittable stay in sync.
   const rejectSelfie = (file: File, reason: string) => {
     setSelfie(null);
+    setStoredSelfie(null);
     setUploadError({ reason, url: URL.createObjectURL(file) });
   };
 
@@ -147,6 +213,7 @@ export function DetailsForm() {
     // A selfie may be mid-validation (checking): selfie is still null but one is
     // in flight — don't flash a false "missing selfie" error.
     if (checking || submitting) return;
+    if (!consentChecked) return; // the CTA is disabled without it; belt-and-braces
     if (!selfie) {
       selfieButtonRef.current?.focus();
       // A rejected photo already shows its own banner ("choose another") — don't
@@ -160,18 +227,15 @@ export function DetailsForm() {
 
     const data = new FormData(event.currentTarget);
     const parentName = String(data.get("name") ?? "").trim();
-    const childName = String(data.get("childName") ?? "").trim();
     const phone = String(data.get("phone") ?? "").trim();
 
     setSubmitting(true);
     try {
       const res = await submitVideo({
         mobileNumber: phone,
-        childName,
         parentName,
         parentRole: selfie.meta?.parentRole,
         childRole: selfie.meta?.childRole,
-        worldSlug: searchParams.get("world") ?? "",
         storySlug: searchParams.get("story") ?? "",
         langCode: searchParams.get("lang") ?? "",
         consentAccepted: true,
@@ -206,16 +270,35 @@ export function DetailsForm() {
     }
   };
 
-  const overlayOpen = choiceOpen || captureMode !== null || otpOpen;
+  const overlayOpen = guidelinesOpen || choiceOpen || captureMode !== null || otpOpen;
 
   return (
     <>
+      {/* Heading + subtitle — the copy swaps once a selfie is verified. */}
+      <h1 className="display mt-5 text-center text-[1.85rem] font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080] animate-rise [animation-delay:100ms]">
+        {selfie ? "Almost There" : "Every Adventure Needs Heroes"}
+      </h1>
+
+      <p className="mt-1.5 text-[13px] text-center leading-snug font-bold text-white [text-shadow:0px_3px_6px_#00000080] animate-rise [animation-delay:160ms]">
+        {selfie ? (
+          <>
+            Everything looks great. Let&apos;s create
+            <br />
+            your magical adventure.
+          </>
+        ) : (
+          "Upload or click a selfie with your little one to begin the journey. Fill in a few details below & let's bring your story to life."
+        )}
+      </p>
+
       <form
+        ref={formRef}
         // The button is always enabled: native validation runs on the required
         // text fields first (the browser shows its own warnings), so this only
         // fires once they pass. The selfie is the one non-native requirement,
         // enforced inside handleSubmit, which then POSTs to /video/submit.
         onSubmit={handleSubmit}
+        onInput={onFieldInput}
         inert={overlayOpen}
         className="animate-rise mt-5 flex min-h-0 flex-1 flex-col [animation-delay:220ms]"
       >
@@ -224,14 +307,14 @@ export function DetailsForm() {
             re-pick); being a sibling (not nested in the dropzone) its tap can't
             trigger the source sheet or the change badge, and being absolute it
             never reflows the form. */}
-        <div className="relative flex min-h-0 w-full flex-1 flex-col">
+        <div className="relative w-full">
           <button
             ref={selfieButtonRef}
             type="button"
-            onClick={() => setChoiceOpen(true)}
+            onClick={() => setGuidelinesOpen(true)}
             disabled={checking}
             aria-label={selfie ? "Change your selfie" : "Add your selfie"}
-            className="group relative flex min-h-24 w-full flex-1 items-center justify-center overflow-hidden rounded-panel transition duration-200 ease-out-soft focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 focus-visible:outline-none"
+            className="group relative flex max-h-57.5 min-h-36 h-full w-full items-center justify-center overflow-hidden rounded-panel transition duration-200 ease-out-soft focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 focus-visible:outline-none"
           >
             {uploadError ? (
               <>
@@ -252,21 +335,24 @@ export function DetailsForm() {
               </>
             ) : selfie ? (
               <>
-                <Image
-                  src={selfie.url}
-                  alt="Your selected selfie"
-                  fill
-                  sizes="400px"
-                  unoptimized
-                  className="object-cover"
-                />
-                {/* Legibility scrim so the change badge reads over any photo. */}
-                <span
-                  aria-hidden
-                  className="absolute inset-0 rounded-panel bg-gradient-to-t from-black/45 to-transparent ring-1 ring-white/40 ring-inset"
-                />
-                <span className="absolute right-3 bottom-3 flex size-9 items-center justify-center rounded-full bg-hero-red shadow-[0_4px_12px_rgba(0,0,0,0.4)] ring-2 ring-white transition-transform duration-200 ease-out-soft group-hover:scale-105">
-                  <Camera aria-hidden className="size-4 text-white" strokeWidth={2.2} />
+                {/* A verified selfie shows as a circular "DP" (equal height &
+                    width), centered — no rectangular panel behind it (that
+                    full-bleed look is reserved for a rejected shot, above). */}
+                <span className="relative aspect-square h-full max-h-44">
+                  <span className="relative block size-full overflow-hidden rounded-full ring-2 ring-white/70 shadow-[0_6px_20px_rgba(0,0,0,0.35)]">
+                    <Image
+                      src={selfie.url}
+                      alt="Your selected selfie"
+                      fill
+                      sizes="200px"
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </span>
+                  {/* Change badge — bottom-centre on the circle's edge. */}
+                  <span className="absolute bottom-1 left-1/2 flex size-8 -translate-x-1/2 items-center justify-center rounded-full bg-hero-red shadow-[0_4px_12px_rgba(0,0,0,0.4)] ring-2 ring-white transition-transform duration-200 ease-out-soft group-hover:scale-105">
+                    <Camera aria-hidden className="size-3.5 text-white" strokeWidth={2.2} />
+                  </span>
                 </span>
               </>
             ) : (
@@ -343,14 +429,6 @@ export function DetailsForm() {
             maxLength={50}
           />
           <Field
-            label="Your child's name"
-            name="childName"
-            placeholder="*Enter your child's name"
-            required
-            minLength={2}
-            maxLength={50}
-          />
-          <Field
             label="Your phone number"
             name="phone"
             placeholder="*Enter your Phone number"
@@ -362,33 +440,72 @@ export function DetailsForm() {
             minLength={10}
             maxLength={10}
           />
+
+          {/* WhatsApp helper — sits directly under the phone field it explains. */}
+          <p className="px-1 text-[0.8rem] text-mist">
+            <span>*Your verification code will be sent on</span> &nbsp;
+            <Image
+              src="/whatsapp.png"
+              alt=""
+              width={20}
+              height={20}
+              className="inline-block size-[1.05rem]"
+            />
+            <span>Whatsapp.</span>
+          </p>
         </div>
 
-        {/* WhatsApp helper */}
-        <p className="mt-2.5 flex items-center gap-1.5 px-1 text-[0.8rem] text-mist">
-          <span>*Your verification code will be sent on</span>
-          <Image
-            src="/whatsapp.png"
-            alt=""
-            width={20}
-            height={20}
-            className="inline-block size-[1.05rem]"
-          />
-          <span>Whatsapp.</span>
-        </p>
+        {/* Consent + primary CTA, grouped and pushed to the bottom (mt-auto) so
+            the CTA sits at the bottom of the screen, like the home CTA. */}
+        <div className="mt-auto flex flex-col gap-3 pt-4">
+          {/* Required consent — controlled, because Send OTP is disabled until
+              it's ticked (and a returning number pre-ticks it). */}
+          <label className="flex items-start gap-2.5 px-1 text-[0.72rem] leading-snug text-mist">
+            <input
+              type="checkbox"
+              name="consent"
+              checked={consentChecked}
+              onChange={(event) => setConsentChecked(event.target.checked)}
+              className="mt-0.5 size-4 shrink-0 accent-hero-red"
+            />
+            <span>
+              I confirm I am 18+ years of age or older, and I have read and
+              understood the{" "}
+              {/* ⚠️ Placeholder hrefs — set the real Privacy Policy / T&C URLs.
+                  Anchors inside the <label> navigate without toggling the box. */}
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-cloud underline underline-offset-2 transition-colors hover:text-white"
+              >
+                Privacy Policy
+              </a>{" "}
+              and{" "}
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-cloud underline underline-offset-2 transition-colors hover:text-white"
+              >
+                Terms &amp; Conditions
+              </a>{" "}
+              of Hero MotoCorp Limited for this campaign.
+            </span>
+          </label>
 
-        {/* Primary CTA — enabled so a press on an incomplete form triggers
-            native field warnings (and the missing-selfie error above), never a
-            dead no-op. Disabled only while the submit request is in flight to
-            block a double-send. Hero red at all times. */}
-        <button
-          type="submit"
-          disabled={submitting}
-          aria-busy={submitting}
-          className={cn(
-            "glass group relative mt-4 mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft",
+          {/* Primary CTA — enabled so a press on an incomplete form triggers
+              native field warnings (and the missing-selfie error above), never a
+              dead no-op. Disabled only while the submit request is in flight to
+              block a double-send. Hero red at all times. */}
+          <button
+            type="submit"
+            disabled={submitting || !consentChecked}
+            aria-busy={submitting}
+            className={cn(
+              "glass group relative mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft",
             "hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
-            "disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none",
+            "disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:shadow-none",
             // `.glass` sets its own box-shadow and, being defined after the
             // utilities, clobbers a box-shadow `ring`, so the focus ring never
             // paints — use an `outline` instead (matches selfie-source-sheet).
@@ -415,7 +532,8 @@ export function DetailsForm() {
               </>
             )}
           </span>
-        </button>
+          </button>
+        </div>
       </form>
 
       {/* Hidden upload input — kept OUTSIDE the form so it stays clickable while
@@ -430,6 +548,17 @@ export function DetailsForm() {
         aria-hidden
       />
 
+      {/* Do's & don'ts first (3s) → then the source choice. */}
+      {guidelinesOpen && (
+        <SelfieGuidelines
+          onDone={() => {
+            setGuidelinesOpen(false);
+            setChoiceOpen(true);
+          }}
+          onClose={() => setGuidelinesOpen(false)}
+        />
+      )}
+
       {choiceOpen && (
         <SelfieSourceSheet
           onTakeSelfie={() => {
@@ -437,8 +566,10 @@ export function DetailsForm() {
             setCaptureMode("camera");
           }}
           onUpload={() => {
+            // Guidelines already shown → open the file picker directly (the tap
+            // is the user gesture the browser needs to open the dialog).
             setChoiceOpen(false);
-            setCaptureMode("upload");
+            openPicker();
           }}
           onClose={() => setChoiceOpen(false)}
         />
@@ -447,6 +578,7 @@ export function DetailsForm() {
       {captureMode && (
         <CaptureOverlay
           mode={captureMode}
+          skipIntro
           onCommit={(file, meta) => {
             setCaptureMode(null);
             commitSelfie(file, meta);
@@ -484,7 +616,11 @@ function Field({ label, className, ...props }: FieldProps) {
       <input
         id={id}
         className={cn(
-          "glass h-14 w-full rounded-input px-5 text-[1rem] text-cloud transition duration-200 ease-out-soft outline-none placeholder:text-mist",
+          "glass h-14 w-full rounded-xl px-4 text-[1rem] text-cloud transition duration-200 ease-out-soft outline-none placeholder:text-mist",
+          // Once the field satisfies its native constraints (required + pattern/
+          // minLength — i.e. it's "done"), tint its background. `!` beats the
+          // `.glass` background shorthand.
+          "valid:bg-[#E9506380]!",
           // Outline, not `ring`: `.glass`'s own box-shadow clobbers a box-shadow
           // ring (see selfie-source-sheet), so the ring would never paint.
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
