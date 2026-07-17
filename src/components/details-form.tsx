@@ -275,8 +275,8 @@ export function DetailsForm() {
   return (
     <>
       {/* Heading + subtitle — the copy swaps once a selfie is verified. */}
-      <h1 className="display mt-5 text-center text-[1.85rem] font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080] animate-rise [animation-delay:100ms]">
-        {selfie ? "Almost There" : "Every Adventure Needs Heroes"}
+      <h1 className="display mt-5 text-center text-3xl font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080] animate-rise [animation-delay:100ms]">
+        {selfie ? "Almost There" : "Every Adventure Needs A Hero"}
       </h1>
 
       <p className="mt-1.5 text-[13px] text-center leading-snug font-bold text-white [text-shadow:0px_3px_6px_#00000080] animate-rise [animation-delay:160ms]">
@@ -449,9 +449,9 @@ export function DetailsForm() {
               alt=""
               width={20}
               height={20}
-              className="inline-block size-[1.05rem]"
+              className="inline-block size-4"
             />
-            <span>Whatsapp.</span>
+            <span>&nbsp;Whatsapp.</span>
           </p>
         </div>
 

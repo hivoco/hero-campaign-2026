@@ -45,7 +45,7 @@ export default function ThankYouPage() {
             height={197}
             preload
             style={{ height: "auto" }}
-            className="w-22"
+            className="w-20"
           />
         </header>
 

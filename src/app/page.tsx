@@ -37,13 +37,13 @@ export default function LandingPage() {
           width={536}
           height={197}
           preload
-          className="mx-auto h-[clamp(3rem,7vh,4rem)] w-auto animate-rise"
+          className="mx-auto h-9 w-auto animate-rise"
         />
 
         {/* Welcome message — padding + text scale down on short screens
             (clamp on vh) so the card stays compact and never overlaps the dragon. */}
         <div className="glass border mt-[clamp(0.75rem,2.2vh,1.25rem)] rounded-xl   py-[clamp(0.5rem,1.6vh,1rem)] animate-rise [animation-delay:120ms] bg-black/25!">
-          <p className="display mx-auto text-center text-[clamp(0.8rem,2vh,1rem)] font-bold leading-none tracking-normal text-white [text-shadow:0px_3.78px_3.78px_#00000080]">
+          <p className="display mx-auto text-center text-base font-bold leading-none tracking-normal text-white">
             Welcome to the Hero Destini world.<br/>
 Create your very own personalised dragon story. <br/><br/>
 <span className="display mx-auto text-center text-[clamp(0.95rem,2.6vh,1.2375rem)] font-bold leading-none tracking-normal text-white [text-shadow:0px_3.78px_3.78px_#00000080]">“5 Lucky Winners Ride Home the All-New Destini.”</span>

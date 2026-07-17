@@ -85,11 +85,11 @@ export function LanguageSelect() {
                  height={197}
                  preload
                  // style={{ height: "auto" }}
-                 className="mx-auto h-11 w-auto animate-rise"
+                 className="mx-auto h-9 w-auto animate-rise"
                />
        
 
-        <h1 className="display-bold mt-7 text-center text-[44px] leading-none tracking-normal text-cloud drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] animate-rise [animation-delay:100ms]">
+        <h1 className="display-bold mt-7 text-center text-3xl leading-none tracking-normal text-cloud drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] animate-rise [animation-delay:100ms]">
           Select your language
         </h1>
 

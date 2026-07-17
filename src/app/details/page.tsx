@@ -38,7 +38,7 @@ export default function DetailsPage() {
                  height={197}
                  preload
                  // style={{ height: "auto" }}
-                 className="mx-auto h-11 w-auto animate-rise"
+                 className="mx-auto h-9 w-auto animate-rise"
                />
 
         {/* Heading + subtitle live inside DetailsForm so their copy can react to
