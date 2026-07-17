@@ -15,6 +15,6 @@ export const languages: Language[] = [
   { code: "malayalam", label: "Malayalam" },
   { code: "bengali", label: "Bengali" },
   { code: "marathi", label: "Marathi" },
-  { code: "gujrati", label: "Gujrati" },
+  { code: "gujarati", label: "Gujarati" },
 ];
   

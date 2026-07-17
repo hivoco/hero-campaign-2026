@@ -111,7 +111,7 @@ export type SubmitInput = {
   parentName: string;
   parentRole?: "father" | "mother";
   childRole?: "son" | "daughter";
-  /** The chosen story slug — sent as `challenge` (the backend stores it there). */
+  /** The chosen story slug — sent as `story` (the backend column). */
   storySlug: string;
   langCode: string;
   city?: string;
@@ -133,8 +133,7 @@ export async function submitVideo(input: SubmitInput): Promise<SubmitResult> {
   form.append("parent_name", input.parentName);
   if (input.parentRole) form.append("parent_role", input.parentRole);
   if (input.childRole) form.append("child_role", input.childRole);
-  // World is gone; `challenge` now holds the chosen story slug verbatim.
-  form.append("challenge", input.storySlug);
+  form.append("story", input.storySlug);
   form.append("language", langToLanguage(input.langCode));
   form.append("city", input.city ?? "");
   form.append("consent_accepted", input.consentAccepted ? "true" : "false");
