@@ -16,7 +16,7 @@ export default function ThankYouPage() {
       {/* Full-bleed campaign hero. */}
       <div aria-hidden className="absolute inset-0">
         <Image
-          src="/hero-bg.png"
+          src="/hero-bg-2.png"
           alt=""
           fill
           preload
@@ -39,7 +39,7 @@ export default function ThankYouPage() {
             Back to Home
           </Link>
           <Image
-            src="/hero-logo.png"
+            src="/hero-logo-2.png"
             alt="Hero"
             width={536}
             height={197}
@@ -68,7 +68,7 @@ export default function ThankYouPage() {
             arrive on your WhatsApp soon.
           </p>
           <Image
-            src="/destini-wordmark.png"
+            src="/destini-wordmark-2.png"
             alt="Hero Destini — available in 110cc and 125cc"
             width={324}
             height={61}

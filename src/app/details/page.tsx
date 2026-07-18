@@ -20,7 +20,7 @@ export default function DetailsPage() {
         <div className="absolute inset-0 bg-black/45 backdrop-blur-[10px]" />
       </div>
 
-      <BackButton href="/language" label="Back to language" />
+      <BackButton href="/" label="Back to home" />
 
       {/* Foreground — a flex column sized to fit the viewport: the selfie
           dropzone (flex-1) grows/shrinks to absorb the slack so the whole form
@@ -32,7 +32,7 @@ export default function DetailsPage() {
         className="relative z-10 flex flex-1 flex-col overflow-y-auto px-4 pt-6 pb-6 scrollbar-none [&::-webkit-scrollbar]:hidden [@media(max-height:850px)]:pt-2.5"
       >
         <Image
-                 src="/hero-logo.png"
+                 src="/hero-logo-2.png"
                  alt="Hero"
                  width={536}
                  height={197}

@@ -84,6 +84,10 @@ export function DetailsForm() {
   // The selfie isn't a native form field, so native validation can't require
   // it. This flips true when the user submits without one (see onSubmit).
   const [selfieRequired, setSelfieRequired] = React.useState(false);
+  // Parent + child roles are user-picked here (no longer derived from the
+  // photo). Both are required before Send OTP.
+  const [parentRole, setParentRole] = React.useState<"father" | "mother" | null>(null);
+  const [childRole, setChildRole] = React.useState<"son" | "daughter" | null>(null);
   // T&C consent gates Send OTP. A returning number that already accepted gets
   // it pre-ticked (server lookup), but they can still untick to withdraw.
   const [consentChecked, setConsentChecked] = React.useState(false);
@@ -106,7 +110,7 @@ export function DetailsForm() {
   // Coming back to this screen: prefill name/phone from the wizard store, and
   // restore the selfie (kept in memory) so nothing typed/picked is lost.
   React.useEffect(() => {
-    const { name, phone } = getWizard();
+    const { name, phone, parentRole: pr, childRole: cr } = getWizard();
     const form = formRef.current;
     if (form) {
       const nameEl = form.elements.namedItem("name") as HTMLInputElement | null;
@@ -114,8 +118,11 @@ export function DetailsForm() {
       if (nameEl && name) nameEl.value = name;
       if (phoneEl && phone) phoneEl.value = phone;
     }
-    // Async — the box only ticks after the lookup resolves, not during this effect.
+    // Restore role picks so back-nav keeps them (like name/phone).
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (pr) setParentRole(pr);
+    if (cr) setChildRole(cr);
+    // Async — the box only ticks after the lookup resolves, not during this effect.
     if (phone) void prefillConsent(phone);
     const stored = getStoredSelfie();
     if (stored) {
@@ -137,6 +144,16 @@ export function DetailsForm() {
       patchWizard({ phone: target.value });
       void prefillConsent(target.value);
     }
+  };
+
+  // Role picks — mirror to the wizard store so back-nav restores them.
+  const chooseParentRole = (r: "father" | "mother") => {
+    setParentRole(r);
+    patchWizard({ parentRole: r });
+  };
+  const chooseChildRole = (r: "son" | "daughter") => {
+    setChildRole(r);
+    patchWizard({ childRole: r });
   };
 
   // Release the preview object URL when it's replaced or the screen unmounts.
@@ -214,6 +231,7 @@ export function DetailsForm() {
     // in flight — don't flash a false "missing selfie" error.
     if (checking || submitting) return;
     if (!consentChecked) return; // the CTA is disabled without it; belt-and-braces
+    if (!parentRole || !childRole) return; // both roles required (CTA disabled too)
     if (!selfie) {
       selfieButtonRef.current?.focus();
       // A rejected photo already shows its own banner ("choose another") — don't
@@ -234,10 +252,13 @@ export function DetailsForm() {
       const res = await submitVideo({
         mobileNumber: phone,
         parentName,
-        parentRole: selfie.meta?.parentRole,
-        childRole: selfie.meta?.childRole,
-        storySlug: searchParams.get("story") ?? "",
-        langCode: searchParams.get("lang") ?? "",
+        // User-picked on the form (not derived from the photo). onSubmit only
+        // proceeds once both are set, so the ?? is just a type guard.
+        parentRole: parentRole ?? undefined,
+        childRole: childRole ?? undefined,
+        // Language is chosen on the home page and kept in the wizard store — it's
+        // never in the URL. (Story is assigned at random by the backend.)
+        langCode: getWizard().lang ?? "",
         consentAccepted: true,
         photo: selfie.file,
         validationToken: selfie.meta?.validationToken,
@@ -275,19 +296,23 @@ export function DetailsForm() {
   return (
     <>
       {/* Heading + subtitle — the copy swaps once a selfie is verified. */}
-      <h1 className="display mt-5 text-center text-3xl font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080] animate-rise [animation-delay:100ms]">
-        {selfie ? "Almost There" : "Every Adventure Needs A Hero"}
+      <h1 className="display mt-5 text-center text-3xl font-bold leading-none tracking-normal text-white [text-shadow:0px_4px_4px_#00000080] animate-rise [animation-delay:100ms] [@media(max-height:800px)]:mt-3 [@media(max-height:800px)]:text-2xl">
+        {selfie ? "Almost There" : "CREATE YOUR DESTINI STORY"}
       </h1>
 
-      <p className="mt-1.5 text-[13px] text-center leading-snug font-bold text-white [text-shadow:0px_3px_6px_#00000080] animate-rise [animation-delay:160ms]">
+      <p className="mt-1.5 text-xs text-center leading-snug font-bold text-white [text-shadow:0px_3px_6px_#00000080] animate-rise [animation-delay:160ms]">
         {selfie ? (
           <>
             Everything looks great. Let&apos;s create
-            <br />
+            <br className="[@media(max-height:800px)]:hidden" />{" "}
             your magical adventure.
           </>
         ) : (
-          "Upload or click a selfie with your little one to begin the journey. Fill in a few details below & let's bring your story to life."
+          <>
+            Fill in a few details below &amp; let&apos;s bring
+            <br className="[@media(max-height:800px)]:hidden" />{" "}
+            your story to life.
+          </>
         )}
       </p>
 
@@ -314,7 +339,7 @@ export function DetailsForm() {
             onClick={() => setGuidelinesOpen(true)}
             disabled={checking}
             aria-label={selfie ? "Change your selfie" : "Add your selfie"}
-            className="group relative flex max-h-57.5 min-h-36 h-full w-full items-center justify-center overflow-hidden rounded-panel transition duration-200 ease-out-soft focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 focus-visible:outline-none"
+            className="group relative flex max-h-57.5 min-h-36 h-full w-full items-center justify-center overflow-hidden rounded-panel transition duration-200 ease-out-soft focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 focus-visible:outline-none [@media(max-height:800px)]:max-h-40 [@media(max-height:800px)]:min-h-28"
           >
             {uploadError ? (
               <>
@@ -428,6 +453,19 @@ export function DetailsForm() {
             minLength={2}
             maxLength={50}
           />
+
+          {/* Roles — user-picked (not from the photo). One from each row is
+              required before Send OTP. */}
+          <div className="flex flex-col gap-2" role="group" aria-label="Select roles">
+            <p className="px-1 text-[0.8rem] text-mist">Select from each category:</p>
+            <div className="grid grid-cols-2 gap-3">
+              <RoleChip label="Father" selected={parentRole === "father"} onClick={() => chooseParentRole("father")} />
+              <RoleChip label="Mother" selected={parentRole === "mother"} onClick={() => chooseParentRole("mother")} />
+              <RoleChip label="Daughter" selected={childRole === "daughter"} onClick={() => chooseChildRole("daughter")} />
+              <RoleChip label="Son" selected={childRole === "son"} onClick={() => chooseChildRole("son")} />
+            </div>
+          </div>
+
           <Field
             label="Your phone number"
             name="phone"
@@ -500,10 +538,10 @@ export function DetailsForm() {
               block a double-send. Hero red at all times. */}
           <button
             type="submit"
-            disabled={submitting || !consentChecked}
+            disabled={submitting || !consentChecked || !parentRole || !childRole}
             aria-busy={submitting}
             className={cn(
-              "glass group relative mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft",
+              "glass group relative mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft [@media(max-height:800px)]:h-12 [@media(max-height:800px)]:text-[0.95rem]",
             "hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
             "disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:shadow-none",
             // `.glass` sets its own box-shadow and, being defined after the
@@ -514,7 +552,7 @@ export function DetailsForm() {
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-pill bg-hero-red/90 ring-1 ring-hero-red-bright ring-inset transition-colors duration-200 group-hover:bg-hero-red"
+            className="pointer-events-none absolute inset-0 rounded-pill   transition-colors duration-200 group-hover:bg-hero-red"
           />
           <span className="relative z-10 flex items-center">
             {submitting ? (
@@ -601,6 +639,34 @@ export function DetailsForm() {
   );
 }
 
+/** A role choice button (Father/Mother/Daughter/Son) — selected fills hero-red. */
+function RoleChip({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        "glass h-14 rounded-xl px-4 text-[1rem] text-cloud transition duration-200 ease-out-soft [@media(max-height:800px)]:h-11 [@media(max-height:800px)]:px-3 [@media(max-height:800px)]:text-[0.9rem]",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright focus-visible:outline-none",
+        selected
+          ? "bg-[#E9506399]! font-semibold text-white ring-1 ring-hero-red-bright ring-inset"
+          : "hover:bg-white/12",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 type FieldProps = React.ComponentPropsWithoutRef<"input"> & {
   label: string;
 };
@@ -616,7 +682,7 @@ function Field({ label, className, ...props }: FieldProps) {
       <input
         id={id}
         className={cn(
-          "glass h-14 w-full rounded-xl px-4 text-[1rem] text-cloud transition duration-200 ease-out-soft outline-none placeholder:text-mist",
+          "glass h-14 w-full rounded-xl px-4 text-[1rem] text-cloud transition duration-200 ease-out-soft outline-none placeholder:text-mist [@media(max-height:800px)]:h-11 [@media(max-height:800px)]:px-3 [@media(max-height:800px)]:text-[0.9rem]",
           // Once the field satisfies its native constraints (required + pattern/
           // minLength — i.e. it's "done"), tint its background. `!` beats the
           // `.glass` background shorthand.

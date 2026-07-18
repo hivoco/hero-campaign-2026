@@ -6,9 +6,9 @@
  *   uploadSelfie(file) → server, authoritative        (POST /photo-validation/check_photo)
  *
  * Committing a selfie requires BOTH to pass. The server gate additionally
- * returns the derived roles + a validation_token (carried on `meta`) that
- * /video/submit needs, so a passing check hands that metadata back to the
- * caller to store alongside the committed selfie.
+ * returns a validation_token (carried on `meta`) that /video/submit needs, so a
+ * passing check hands that back to the caller to store with the committed
+ * selfie. Roles are NOT derived here — the user picks them on the details form.
  */
 import { countWellFramedFaces, REQUIRED_FACE_COUNT } from "@/lib/face-gate";
 import { checkPhoto, getPhotoValidationEnabled, ApiError } from "@/lib/api";
@@ -25,15 +25,13 @@ export type SelfieReason =
 
 export type SelfieVerdict = { ok: boolean; reasons: SelfieReason[] };
 
-/** Data the server gate derives from a valid selfie — needed by /video/submit. */
+/** Data the server gate returns for a valid selfie — needed by /video/submit. */
 export type SelfieMeta = {
   validationToken?: string;
-  parentRole?: "father" | "mother";
-  childRole?: "son" | "daughter";
 };
 
 /** Server verdict: a base verdict plus a ready-to-show `message` (the backend's
- *  human reason) on failure, and `meta` (token + roles) on success. */
+ *  human reason) on failure, and `meta` (the validation token) on success. */
 export type ServerVerdict = SelfieVerdict & {
   message?: string;
   meta?: SelfieMeta;
@@ -142,9 +140,9 @@ export async function localCheck(file: File): Promise<SelfieVerdict> {
 
 /**
  * Server gate (authoritative) — POSTs the still to /photo-validation/check_photo.
- * A valid photo returns the derived roles + a validation_token on `meta` (which
- * /video/submit requires); a rejected one returns the backend's human `message`.
- * A network/service error is surfaced as a rejection so an unvalidated selfie is
+ * A valid photo returns a validation_token on `meta` (which /video/submit
+ * requires); a rejected one returns the backend's human `message`. A
+ * network/service error is surfaced as a rejection so an unvalidated selfie is
  * never committed (the flow stays retryable). The `?selfie=` QA override still
  * short-circuits it so both branches are demoable without a backend.
  */
@@ -158,8 +156,8 @@ export async function uploadSelfie(file: File): Promise<ServerVerdict> {
   }
 
   // Admin turned photo validation off → skip the server gate entirely. The
-  // selfie commits with no token/roles, so /video/submit stores NULL roles —
-  // which marks it an unverified photo. The client face gate (localCheck) still ran.
+  // selfie commits with no token, so /video/submit marks it an unverified photo.
+  // The client face gate (localCheck) still ran.
   if (!(await getPhotoValidationEnabled())) {
     return { ok: true, reasons: [], meta: {} };
   }
@@ -176,11 +174,7 @@ export async function uploadSelfie(file: File): Promise<ServerVerdict> {
     return {
       ok: true,
       reasons: [],
-      meta: {
-        validationToken: result.validationToken,
-        parentRole: result.parentRole,
-        childRole: result.childRole,
-      },
+      meta: { validationToken: result.validationToken },
     };
   } catch (error) {
     const message =

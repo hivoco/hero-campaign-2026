@@ -46,15 +46,14 @@ export type PhotoCheck = {
   valid: boolean;
   reason?: string;
   message?: string;
-  parentRole?: "father" | "mother";
-  childRole?: "son" | "daughter";
   validationToken?: string;
 };
 
 /**
- * Validate a combined parent+child selfie. On a valid photo the backend derives
- * the roles and returns a short-lived `validation_token` that /video/submit
- * requires. A rejected photo returns `valid: false` with a human `reason`.
+ * Validate a combined parent+child selfie. On a valid photo the backend returns
+ * a short-lived `validation_token` that /video/submit requires (it does NOT
+ * derive roles — the user picks those). A rejected photo returns `valid: false`
+ * with a human `reason`.
  */
 export async function checkPhoto(file: File): Promise<PhotoCheck> {
   const form = new FormData();
@@ -69,8 +68,6 @@ export async function checkPhoto(file: File): Promise<PhotoCheck> {
     valid: !!data.valid,
     reason: data.reason ?? undefined,
     message: data.message ?? undefined,
-    parentRole: data.parent_role ?? undefined,
-    childRole: data.child_role ?? undefined,
     validationToken: data.validation_token ?? undefined,
   };
 }
@@ -111,8 +108,6 @@ export type SubmitInput = {
   parentName: string;
   parentRole?: "father" | "mother";
   childRole?: "son" | "daughter";
-  /** The chosen story slug — sent as `story` (the backend column). */
-  storySlug: string;
   langCode: string;
   city?: string;
   consentAccepted: boolean;
@@ -133,7 +128,7 @@ export async function submitVideo(input: SubmitInput): Promise<SubmitResult> {
   form.append("parent_name", input.parentName);
   if (input.parentRole) form.append("parent_role", input.parentRole);
   if (input.childRole) form.append("child_role", input.childRole);
-  form.append("story", input.storySlug);
+  // Story is assigned at random by the backend — not sent from here.
   form.append("language", langToLanguage(input.langCode));
   form.append("city", input.city ?? "");
   form.append("consent_accepted", input.consentAccepted ? "true" : "false");
