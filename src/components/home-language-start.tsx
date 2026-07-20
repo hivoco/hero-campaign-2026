@@ -55,21 +55,26 @@ export function HomeLanguageStart() {
         })}
       </ul>
 
-      <button
-        type="button"
-        onClick={start}
-        disabled={!selected}
-        aria-disabled={!selected}
-        title={selected ? undefined : "Select a language first"}
-        className={cn(
-          "glass group flex h-12.25 w-full items-center justify-center rounded-pill bg-white/15! px-6 text-lg font-bold leading-none tracking-normal text-white transition duration-200 ease-out-soft",
-          "hover:-translate-y-0.5 hover:bg-white/25! hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40",
-          "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-white/15! disabled:hover:shadow-none",
-        )}
-      >
-        START YOUR ADVENTURE
-      </button>
+      {/* Relative wrapper so the travelling-border ring sits around the button. */}
+      <div className="relative">
+        {/* The glow that runs around the border — decorative, behind the button. */}
+        <span aria-hidden className="cta-glow" />
+        <button
+          type="button"
+          onClick={start}
+          disabled={!selected}
+          aria-disabled={!selected}
+          title={selected ? undefined : "Select a language first"}
+          className={cn(
+            "glass group relative z-10 flex h-12.25 w-full items-center justify-center rounded-pill bg-white/15! px-6 text-lg font-bold leading-none tracking-normal text-white transition duration-200 ease-out-soft",
+            "hover:-translate-y-0.5 hover:bg-white/25! hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40",
+            "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-white/15! disabled:hover:shadow-none",
+          )}
+        >
+          START YOUR ADVENTURE
+        </button>
+      </div>
     </div>
   );
 }
