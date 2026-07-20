@@ -50,6 +50,8 @@ src/
       page.tsx           # "/details"         — Details + selfie ("Every Adventure Needs Heroes") + OTP sheet
     thank-you/
       page.tsx           # "/thank-you"       — Thank-you / end screen
+    terms/
+      page.tsx           # "/terms"           — Terms & Conditions + Privacy Notice (light page; #privacy anchor)
   components/
     world-carousel.tsx     # client carousel (embla) for world selection
     language-select.tsx    # server-rendered tap-to-navigate language list (links, no client JS)
@@ -111,6 +113,7 @@ panels/cards, condensed uppercase headings, and Hero red as the accent. Design t
 | 5 | Details + selfie ("Every Adventure Needs Heroes") | `/details` | ✅ Built |
 | 6 | OTP verification + consent (bottom-sheet **modal** on `/details`) | — | ✅ Built |
 | 7 | Thank-you / end screen | `/thank-you` | ✅ Built |
+| — | Terms & Conditions + Privacy Notice (light legal page, linked from the `/details` consent line) | `/terms` | ✅ Built |
 
 The flow is fully built end-to-end. Two steps on `/details` are **overlays, not separate routes**: the
 **selfie capture flow** (instructions → live camera → wrong/correct) and the **OTP + consent** bottom-sheet.

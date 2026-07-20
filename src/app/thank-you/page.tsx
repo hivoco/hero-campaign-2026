@@ -59,14 +59,18 @@ export default function ThankYouPage() {
           <span className="display block text-[2.6rem] leading-[0.85] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[2rem]">
             Scooter Ka Hero
           </span>
+           <p className="display block text-[1.6rem] leading-[0.85] text-white mt-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[1.8rem]">
+            Thank You For your Submission
+          </p>
+           <p className="w-full text-sm text-center leading-none font-normal mt-1 text-white [text-shadow:0px_4px_4px_#00000099] animate-rise [animation-delay:120ms]">
+            Your Hero Destini adventure is being created.<br/> It will
+            arrive on your WhatsApp soon.
+          </p>
         </h1>
 
         {/* Confirmation + wordmark. */}
-        <div className="mt-auto flex flex-col items-center text-center">
-          <p className="w-full text-base text-center leading-none font-bold text-white [text-shadow:0px_4px_4px_#00000099] animate-rise [animation-delay:120ms]">
-            Your Hero Destini adventure is being created just for you. It will
-            arrive on your WhatsApp soon.
-          </p>
+        <div className="mt-auto mb-7  flex flex-col items-center text-center">
+         
           <Image
             src="/destini-wordmark-2.png"
             alt="Hero Destini — available in 110cc and 125cc"

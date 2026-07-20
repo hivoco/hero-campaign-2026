@@ -273,7 +273,10 @@ export function DetailsForm() {
         setOtpCtx({ mobile: phone, jobId: res.job_id });
         setOtpOpen(true);
       } else if (res.status === "video_created" || res.status === "verified") {
-        // Already-verified returning user — no OTP step.
+        // Already-verified returning user — no OTP step. Submission is complete,
+        // so drop the stored selfie (a new video must start with a fresh photo).
+        setStoredSelfie(null);
+        setSelfie(null);
         router.push("/thank-you");
       } else if (res.status === "pending") {
         toast(res.message ?? "Your previous video is still being processed.");
@@ -509,10 +512,12 @@ export function DetailsForm() {
             <span>
               I confirm I am 18+ years of age or older, and I have read and
               understood the{" "}
-              {/* ⚠️ Placeholder hrefs — set the real Privacy Policy / T&C URLs.
-                  Anchors inside the <label> navigate without toggling the box. */}
+              {/* The combined T&C + Privacy Notice lives at /terms; the Privacy
+                  link jumps to the privacy section. Anchors inside the <label>
+                  navigate without toggling the box; open in a new tab so the
+                  form input isn't lost. */}
               <a
-                href="#"
+                href="/terms#privacy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-cloud underline underline-offset-2 transition-colors hover:text-white"
@@ -521,7 +526,7 @@ export function DetailsForm() {
               </a>{" "}
               and{" "}
               <a
-                href="#"
+                href="/terms"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-cloud underline underline-offset-2 transition-colors hover:text-white"

@@ -7,9 +7,13 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { verifyOtp, resendOtp, ApiError } from "@/lib/api";
+import { setStoredSelfie } from "@/lib/wizard";
 import { DETAILS_SCROLL_ID, useScrollLock } from "@/hooks/use-scroll-lock";
 
 const OTP_LENGTH = 6;
+/** Must match the backend OTP_RESEND_COOLDOWN_MINUTES (4 min): the old code is
+ *  invalidated on resend, and the backend rejects an earlier request. */
+const RESEND_COOLDOWN_SECONDS = 4 * 60;
 
 type Props = {
   onClose: () => void;
@@ -34,6 +38,10 @@ export function VerifyModal({ onClose, mobile }: Props) {
   );
   const [resending, setResending] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  // Resend cooldown — seconds left before "Resend" unlocks. Bumping resendCycle
+  // (on a successful resend) restarts the countdown from the top.
+  const [cooldown, setCooldown] = React.useState(RESEND_COOLDOWN_SECONDS);
+  const [resendCycle, setResendCycle] = React.useState(0);
 
   const inputsRef = React.useRef<(HTMLInputElement | null)[]>([]);
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
@@ -46,6 +54,24 @@ export function VerifyModal({ onClose, mobile }: Props) {
   useScrollLock(DETAILS_SCROLL_ID);
 
   const otp = digits.join("");
+  const canResend = cooldown <= 0 && !resending;
+  const cooldownLabel = `${Math.floor(cooldown / 60)}:${String(cooldown % 60).padStart(2, "0")}`;
+
+  // Tick the resend cooldown once a second off a wall-clock deadline (so it
+  // stays accurate if a tick is delayed), restarting whenever resendCycle bumps.
+  React.useEffect(() => {
+    const deadline = Date.now() + RESEND_COOLDOWN_SECONDS * 1000;
+    const tick = () => {
+      const secs = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setCooldown(secs);
+      return secs;
+    };
+    tick();
+    const id = window.setInterval(() => {
+      if (tick() <= 0) window.clearInterval(id);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [resendCycle]);
 
   // Keep the latest onClose without re-running the mount-only focus effect.
   const onCloseRef = React.useRef(onClose);
@@ -167,6 +193,9 @@ export function VerifyModal({ onClose, mobile }: Props) {
     try {
       const res = await verifyOtp(mobile, otp);
       if (res.status === "verified") {
+        // Submission complete — drop the stored selfie so a new video starts
+        // with a fresh photo (the details form reads this on mount).
+        setStoredSelfie(null);
         // Navigating away unmounts this modal — leave `submitting` true so the
         // button stays busy through the transition.
         router.push("/thank-you");
@@ -185,11 +214,13 @@ export function VerifyModal({ onClose, mobile }: Props) {
   };
 
   const handleResend = async () => {
-    if (resending) return;
+    if (!canResend) return;
     setResending(true);
     try {
       const res = await resendOtp(mobile);
       toast.success(res.message ?? "A new code is on its way.");
+      // New code sent → the old one is now invalid; restart the cooldown.
+      setResendCycle((cycle) => cycle + 1);
     } catch (error) {
       toast.error(
         error instanceof ApiError
@@ -274,18 +305,30 @@ export function VerifyModal({ onClose, mobile }: Props) {
               ))}
             </div>
 
-            {/* Resend — the OTP is sent by the submit that opened this sheet; a
-                resend re-requests one (backend rate-limits to 3 / 10 min). */}
-            <p className="mt-4 text-center text-[0.85rem] text-ink/60">
-              Didn&apos;t get the code?{" "}
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resending}
-                className="font-semibold text-hero-red underline-offset-2 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red"
-              >
-                {resending ? "Sending…" : "Resend"}
-              </button>
+            {/* Resend — the OTP is sent by the submit that opened this sheet. A
+                resend is locked for the first 4 minutes (matches the backend
+                cooldown, which also invalidates the old code on resend). */}
+            <p className="mt-4 text-center text-[0.85rem] text-ink/60" aria-live="polite">
+              {canResend ? (
+                <>
+                  Didn&apos;t get the code?{" "}
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resending}
+                    className="font-semibold text-hero-red underline-offset-2 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red"
+                  >
+                    {resending ? "Sending…" : "Resend"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  Didn&apos;t get the code? You can resend in{" "}
+                  <span className="font-semibold text-ink/80 tabular-nums">
+                    {cooldownLabel}
+                  </span>
+                </>
+              )}
             </p>
           </div>
 
