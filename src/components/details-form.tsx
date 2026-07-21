@@ -331,14 +331,14 @@ export function DetailsForm() {
         {selfie ? (
           <>
             Everything looks great. Let&apos;s create
-            <br className="[@media(max-height:800px)]:hidden" />{" "}
-            your magical adventure.
+            <br className="[@media(max-height:800px)]:hidden" /> your magical
+            adventure.
           </>
         ) : (
           <>
             Fill in a few details below &amp; let&apos;s bring
-            <br className="[@media(max-height:800px)]:hidden" />{" "}
-            your story to life.
+            <br className="[@media(max-height:800px)]:hidden" /> your story to
+            life.
           </>
         )}
       </p>
@@ -403,7 +403,11 @@ export function DetailsForm() {
                   </span>
                   {/* Change badge — bottom-centre on the circle's edge. */}
                   <span className="absolute bottom-1 left-1/2 flex size-8 -translate-x-1/2 items-center justify-center rounded-full bg-hero-red shadow-[0_4px_12px_rgba(0,0,0,0.4)] ring-2 ring-white transition-transform duration-200 ease-out-soft group-hover:scale-105">
-                    <Camera aria-hidden className="size-3.5 text-white" strokeWidth={2.2} />
+                    <Camera
+                      aria-hidden
+                      className="size-3.5 text-white"
+                      strokeWidth={2.2}
+                    />
                   </span>
                 </span>
               </>
@@ -427,7 +431,10 @@ export function DetailsForm() {
 
             {checking && (
               <span className="absolute inset-0 grid place-items-center rounded-panel bg-black/55">
-                <Loader2 aria-hidden className="size-8 animate-spin text-white" />
+                <Loader2
+                  aria-hidden
+                  className="size-8 animate-spin text-white"
+                />
               </span>
             )}
           </button>
@@ -483,13 +490,35 @@ export function DetailsForm() {
 
           {/* Roles — user-picked (not from the photo). One from each row is
               required before Send OTP. */}
-          <div className="flex flex-col gap-2" role="group" aria-label="Select roles">
-            <p className="px-1 text-[0.8rem] text-mist">Select from each category:</p>
+          <div
+            className="flex flex-col gap-2"
+            role="group"
+            aria-label="Select roles"
+          >
+            <p className="px-1 text-[0.8rem] text-mist">
+              Select from each category:
+            </p>
             <div className="grid grid-cols-2 gap-3">
-              <RoleChip label="Father" selected={parentRole === "father"} onClick={() => chooseParentRole("father")} />
-              <RoleChip label="Mother" selected={parentRole === "mother"} onClick={() => chooseParentRole("mother")} />
-              <RoleChip label="Daughter" selected={childRole === "daughter"} onClick={() => chooseChildRole("daughter")} />
-              <RoleChip label="Son" selected={childRole === "son"} onClick={() => chooseChildRole("son")} />
+              <RoleChip
+                label="Father"
+                selected={parentRole === "father"}
+                onClick={() => chooseParentRole("father")}
+              />
+              <RoleChip
+                label="Mother"
+                selected={parentRole === "mother"}
+                onClick={() => chooseParentRole("mother")}
+              />
+              <RoleChip
+                label="Daughter"
+                selected={childRole === "daughter"}
+                onClick={() => chooseChildRole("daughter")}
+              />
+              <RoleChip
+                label="Son"
+                selected={childRole === "son"}
+                onClick={() => chooseChildRole("son")}
+              />
             </div>
           </div>
 
@@ -518,8 +547,11 @@ export function DetailsForm() {
             />
             <span>&nbsp;Whatsapp.</span>
           </p>
-           <p className="px-1 -mt-3 text-[0.8rem] text-mist">
-            <span>*child's age has to be between 4 years and 10 years.</span> &nbsp;
+          <p className="px-1 -mt-3 text-[0.8rem] text-mist">
+            <span>
+              *child&apos;s age has to be between 4 years and 10 years.
+            </span>{" "}
+            &nbsp;
           </p>
         </div>
 
@@ -539,26 +571,17 @@ export function DetailsForm() {
             <span>
               I confirm I am 18+ years of age or older, and I have read and
               understood the{" "}
-              {/* The combined T&C + Privacy Notice lives at /terms; the Privacy
-                  link jumps to the privacy section. Anchors inside the <label>
-                  navigate without toggling the box; open in a new tab so the
-                  form input isn't lost. */}
+              {/* The combined T&C + Privacy Notice live on one route. Both
+                  phrases link to the same page and open in a new tab so the
+                  form input isn't lost. Anchors inside the <label> navigate
+                  without toggling the box. */}
               <a
-                href="/terms#privacy"
+                href="/privacy-policy-and-terms-conditions"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-cloud underline underline-offset-2 transition-colors hover:text-white"
               >
-                Privacy Policy
-              </a>{" "}
-              and{" "}
-              <a
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-cloud underline underline-offset-2 transition-colors hover:text-white"
-              >
-                Terms &amp; Conditions
+                Privacy Policy and Terms &amp; Conditions
               </a>{" "}
               of Hero MotoCorp Limited for this campaign.
             </span>
@@ -570,44 +593,46 @@ export function DetailsForm() {
               block a double-send. Hero red at all times. */}
           <button
             type="submit"
-            disabled={submitting || !consentChecked || !parentRole || !childRole}
+            disabled={
+              submitting || !consentChecked || !parentRole || !childRole
+            }
             aria-busy={submitting}
             className={cn(
               "glass group relative mb-1 flex h-14 shrink-0 items-center justify-center overflow-hidden rounded-pill px-6 text-[1.05rem] font-semibold tracking-wide text-cloud transition duration-200 ease-out-soft [@media(max-height:800px)]:h-12 [@media(max-height:800px)]:text-[0.95rem]",
-            "hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
-            "disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:shadow-none",
-            // `.glass` sets its own box-shadow and, being defined after the
-            // utilities, clobbers a box-shadow `ring`, so the focus ring never
-            // paints — use an `outline` instead (matches selfie-source-sheet).
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
-          )}
-        >
-          <span
-            aria-hidden
-            className={cn(
-              // Transparent glass by default → the same filled tint the inputs
-              // take once "done" when the whole form is ready → full hero-red on
-              // hover (more specific `group-hover` selector wins over the tint).
-              "pointer-events-none absolute inset-0 rounded-pill transition-colors duration-200 group-hover:bg-hero-red",
-              ready && "bg-hero-red",
+              "hover:-translate-y-0.5 hover:shadow-lift active:translate-y-0 active:scale-[0.99]",
+              "disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+              // `.glass` sets its own box-shadow and, being defined after the
+              // utilities, clobbers a box-shadow `ring`, so the focus ring never
+              // paints — use an `outline` instead (matches selfie-source-sheet).
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-red-bright",
             )}
-          />
-          <span className="relative z-10 flex items-center">
-            {submitting ? (
-              <>
-                Sending
-                <Loader2 aria-hidden className="ml-2 size-5 animate-spin" />
-              </>
-            ) : (
-              <>
-                Send OTP
-                <ArrowRight
-                  aria-hidden
-                  className="ml-2 size-5 transition-transform duration-200 ease-out-soft group-hover:translate-x-1"
-                />
-              </>
-            )}
-          </span>
+          >
+            <span
+              aria-hidden
+              className={cn(
+                // Transparent glass by default → the same filled tint the inputs
+                // take once "done" when the whole form is ready → full hero-red on
+                // hover (more specific `group-hover` selector wins over the tint).
+                "pointer-events-none absolute inset-0 rounded-pill transition-colors duration-200 group-hover:bg-hero-red",
+                ready && "bg-hero-red",
+              )}
+            />
+            <span className="relative z-10 flex items-center">
+              {submitting ? (
+                <>
+                  Sending
+                  <Loader2 aria-hidden className="ml-2 size-5 animate-spin" />
+                </>
+              ) : (
+                <>
+                  Send OTP
+                  <ArrowRight
+                    aria-hidden
+                    className="ml-2 size-5 transition-transform duration-200 ease-out-soft group-hover:translate-x-1"
+                  />
+                </>
+              )}
+            </span>
           </button>
         </div>
       </form>

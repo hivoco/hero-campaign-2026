@@ -1,10 +1,10 @@
 /**
- * Hero Destiny Fantasy World — combined Terms & Conditions and Privacy Notice.
+ * Hero Destini Fantasy World — combined Terms & Conditions and Privacy Notice.
  *
- * Verbatim from the legal PDF (20260717) — legally load-bearing, do NOT
- * paraphrase. Rendered by `src/app/terms/page.tsx`. Section F carries the
- * `privacy` anchor (the Privacy Notice spans F–M), so `/terms#privacy` jumps
- * straight to the data-collection section.
+ * Verbatim from the legal doc (20260721_Terms and conditions.docx) — legally
+ * load-bearing, do NOT paraphrase. Rendered by
+ * `src/app/privacy-policy-and-terms-conditions/page.tsx` as a single flowing
+ * document (no in-page anchors / table of contents).
  */
 
 export type LegalItem = {
@@ -18,8 +18,6 @@ export type LegalItem = {
 export type LegalSection = {
   letter: string; // "A", "B", …
   title: string;
-  /** Anchor id override (e.g. "privacy"); defaults to `sec-<letter>`. */
-  id?: string;
   /** Paragraphs shown above the numbered list. */
   intro?: string[];
   /** The numbered clauses. */
@@ -29,10 +27,10 @@ export type LegalSection = {
 };
 
 export const LEGAL_TITLE = "Terms & Conditions and Privacy Notice";
-export const LEGAL_SUBTITLE = "Hero Destiny Fantasy World";
+export const LEGAL_SUBTITLE = "Hero Destini Fantasy World";
 
 export const LEGAL_INTRO: string[] = [
-  `Welcome to Hero Destiny Fantasy World! This platform allows parents to create a limited-edition, hyper-personalised film (the “Video”) generated using Artificial Intelligence (“AI”), featuring the parent and their child together. The final output is delivered to the parent’s WhatsApp number.`,
+  `Welcome to Hero Destini Fantasy World! This platform allows parents to create a limited-edition, hyper-personalised film (the “Video”) generated using Artificial Intelligence (“AI”), featuring the parent and their child together. The final output is delivered to the parent’s WhatsApp number.`,
   `By using our website/microsite destinistory.heromotocorp.com (“Platform”), you (“Participant”, “you”, or “your”)—being the parent of the child whose details are provided—unconditionally agree to comply with these Terms and Conditions (“Terms”). Because this campaign (the “Campaign”) involves processing personal data under the Digital Personal Data Protection Act, 2023 (“DPDP Act”) and the Digital Personal Data Protection Rules, 2025 (the “Rules”), please review these Terms thoroughly before proceeding.`,
 ];
 
@@ -104,7 +102,6 @@ export const LEGAL_SECTIONS: LegalSection[] = [
   },
   {
     letter: "F",
-    id: "privacy",
     title: "Itemized Categories of Personal Data Collected",
     intro: [`To achieve the specified purposes, the Company limits collection to the following items:`],
     items: [
@@ -130,8 +127,8 @@ export const LEGAL_SECTIONS: LegalSection[] = [
     letter: "H",
     title: "Data Retention & Mandatory Erasure",
     items: [
-      { lead: "Transient Data Assets:", text: `Parent and child photographs used for Video generation will be permanently deleted from the active processing servers promptly after delivery of the Video, and in no event later than 1 day from upload of the photographs, regardless of any optional consents provided.` },
-      { lead: "Campaign Core Data:", text: `Personal data collected for validation purposes or for delivery of the Video will be retained only until the expiration of the Campaign or 1 day post-closure, whichever is later, unless an active optional consent as per the Terms is active.` },
+      { lead: "Transient Data Assets:", text: `Parent and child photographs used for Video generation will be permanently deleted from the active processing servers promptly after delivery of the Video, and in no event later than 1 day from upload of the photographs.` },
+      { lead: "Campaign Core Data:", text: `Personal data collected for validation purposes or for delivery of the Video will be retained only until the expiration of the Campaign or 1 day post-closure, whichever is later.` },
       { lead: "Statutory Logs:", text: `Pursuant to the Rules, systemic transaction and processing logs will be retained securely for a minimum period of one (1) year where required as per DPDP Act and underlying Rules.` },
     ],
   },
@@ -163,7 +160,7 @@ export const LEGAL_SECTIONS: LegalSection[] = [
     items: [
       { lead: "No Tracking or Profiling:", text: `In compliance with the DPDP Act, the Company will never track, profile, behaviorally monitor, or target advertisements at the child.` },
       { lead: "Well-being Shield:", text: `Data processing will not be conducted in any manner likely to cause a detrimental effect on the well-being of the minor.` },
-      { lead: "No Public Advertising:", text: `The Company will never use the your or your child’s name, likeness, image, or video output in any corporate publicity, television commercial, or paid advertisement without explicit, separate legal instruments. Any optional consent taken from the parent for the above mentioned purposes applies exclusively to parent.` },
+      { lead: "No Public Advertising:", text: `The Company will never use the your or your child’s name, likeness, image, or video output in any corporate publicity, television commercial, or paid advertisement without explicit, separate legal instruments.` },
       { lead: "Exception for User-Initiated Social Sharing:", text: `If you choose to share your generated Video publicly on platforms like Instagram and tag the Company’s official handle, you grant the Company a non-exclusive, worldwide, royalty-free license to reshare that specific post. This remains active until you delete the post or remove the tag.` },
     ],
   },
@@ -212,7 +209,7 @@ export const LEGAL_SECTIONS: LegalSection[] = [
     ],
     items: [
       { lead: "Mandatory —", text: `I consent to the Company processing my name, my selfie, my child's first name, his/her photograph to generate our personalized video graphic film.` },
-      { lead: "Mandatory —", text: `I consent to Hero MotoCorp Limited using my WhatsApp number to conduct an OTP verification, deliver the Video and send essential campaign details.` },
+      { lead: "Mandatory —", text: `I consent to Company using my WhatsApp number to conduct an OTP verification, deliver the Video and send essential Campaign details.` },
     ],
   },
 ];
