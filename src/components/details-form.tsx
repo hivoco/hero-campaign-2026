@@ -15,7 +15,7 @@ import {
   verdictMessage,
   type SelfieMeta,
 } from "@/lib/selfie-check";
-import { submitVideo, getTcAccepted, ApiError } from "@/lib/api";
+import { submitVideo, ApiError } from "@/lib/api";
 import {
   getWizard,
   patchWizard,
@@ -88,11 +88,10 @@ export function DetailsForm() {
   // photo). Both are required before Send OTP.
   const [parentRole, setParentRole] = React.useState<"father" | "mother" | null>(null);
   const [childRole, setChildRole] = React.useState<"son" | "daughter" | null>(null);
-  // T&C consent gates Send OTP. A returning number that already accepted gets
-  // it pre-ticked (server lookup), but they can still untick to withdraw.
+  // T&C consent gates Send OTP. It always starts UNCHECKED and must be ticked
+  // afresh on every visit — even a returning number that accepted before has to
+  // re-consent each time (no server pre-tick), so consent is an explicit act.
   const [consentChecked, setConsentChecked] = React.useState(false);
-  // The number we last looked up, so typing doesn't refire the request.
-  const tcLookedUpForRef = React.useRef<string | null>(null);
   // Everything-filled? Mirrors the inputs' own "valid → tint" cue onto the CTA:
   // native fields valid (name + phone pattern) plus the non-native requirements
   // (selfie, both roles, consent). When true the button takes the same filled
@@ -102,15 +101,6 @@ export function DetailsForm() {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const selfieButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const formRef = React.useRef<HTMLFormElement | null>(null);
-
-  // Once the number is complete, ask the backend whether it already accepted the
-  // T&C — a returning user gets the box pre-ticked instead of re-reading it.
-  const prefillConsent = React.useCallback(async (raw: string) => {
-    const digits = raw.replace(/\D/g, "");
-    if (digits.length !== 10 || tcLookedUpForRef.current === digits) return;
-    tcLookedUpForRef.current = digits;
-    if (await getTcAccepted(digits)) setConsentChecked(true);
-  }, []);
 
   // Coming back to this screen: prefill name/phone from the wizard store, and
   // restore the selfie (kept in memory) so nothing typed/picked is lost.
@@ -127,8 +117,7 @@ export function DetailsForm() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (pr) setParentRole(pr);
     if (cr) setChildRole(cr);
-    // Async — the box only ticks after the lookup resolves, not during this effect.
-    if (phone) void prefillConsent(phone);
+    // Consent is deliberately NOT restored — it must be re-ticked every visit.
     const stored = getStoredSelfie();
     if (stored) {
       // Restore the persisted selfie on mount (external store → state). The
@@ -139,7 +128,7 @@ export function DetailsForm() {
         meta: stored.meta,
       });
     }
-  }, [prefillConsent]);
+  }, []);
 
   // Recompute the CTA's "ready" tint: the native fields must pass their own
   // constraints (checkValidity covers name + phone pattern — it shows no UI, it
@@ -162,10 +151,7 @@ export function DetailsForm() {
   const onFieldInput = (event: React.SyntheticEvent<HTMLFormElement>) => {
     const target = event.target as HTMLInputElement;
     if (target.name === "name") patchWizard({ name: target.value });
-    else if (target.name === "phone") {
-      patchWizard({ phone: target.value });
-      void prefillConsent(target.value);
-    }
+    else if (target.name === "phone") patchWizard({ phone: target.value });
     // The typed value changes native validity — retint the CTA to match.
     refreshReady();
   };
