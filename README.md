@@ -174,9 +174,14 @@ screen. 6-digit OTP (auto-advance / backspace / paste / arrows), eligibility dec
 guardian), and four consent checkboxes (two required, two optional). "Submit & Generate" is **disabled**
 until the OTP is complete AND both required consents are checked, then routes to `/thank-you`.
 
-**7. Thank-you / end screen** (`/thank-you`) — the full-bleed campaign hero (`hero-bg.png`), "Back to
-Home", Hero logo, the "Hero Ka Scooter / Scooter Ka Hero" tagline plate, confirmation copy ("Your Hero
-Destini adventure is being created… arrives on WhatsApp soon"), and the Destini wordmark.
+**7. Thank-you / end screen** (`/thank-you`) — the full-bleed campaign hero (`hero-bg-2.png`), "Back to
+Home", Hero logo, the "Hero Ka Scooter / Scooter Ka Hero" confirmation plate ("Thank You For Your
+Submission" + "Your Hero Destini adventure is being created… arrives on WhatsApp soon"), then a **2×4
+showcase grid of the eight Destini stories** (each card = a full-bleed story photo with a frosted, blurred
+title box floating over its right side, inside a bright-bordered glass frame; catalogue in
+`src/lib/stories.ts`), the Destini wordmark, and
+the "Create Another Story" button. The whole story grid is a single link back to `/details`, and the
+screen fits one viewport with no scrolling (the grid flexes to fill the leftover height).
 
 ### Validation rules
 - Details form (**native HTML**): parent name & child's name `required` (min 2 chars); phone `required` +

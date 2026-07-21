@@ -2,14 +2,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+import { STORIES } from "@/lib/stories";
 
 /**
  * Thank-you / end screen (screen 8).
  *
- * The full-bleed campaign hero (family on the Destini, dragon soaring behind)
- * carries the payoff. Top scrim seats the "Back to Home" pill, Hero logo, and
- * the "Hero Ka Scooter / Scooter Ka Hero" tagline plate; the bottom scrim holds
- * the confirmation copy and the Destini wordmark. Server component — static.
+ * The full-bleed campaign hero carries the payoff. The top scrim seats the
+ * "Back to Home" pill + Hero logo and the "Hero Ka Scooter / Scooter Ka Hero"
+ * confirmation plate; below it a 2×4 showcase grid of the Destini story
+ * catalogue (each card links back into the flow at /details); the bottom holds
+ * the Destini wordmark and the "Create Another Story" CTA.
+ *
+ * The whole screen fits one viewport with no scroll: the story grid is the
+ * flex-1 region, so it absorbs leftover height — cards grow on tall phones and
+ * shrink on short ones (down to iPhone-SE heights) while every card, the
+ * wordmark and the CTA stay on screen. Server component — static, zero client JS.
  */
 export default function ThankYouPage() {
   return (
@@ -22,16 +29,18 @@ export default function ThankYouPage() {
           fill
           preload
           sizes="440px"
-          className="object-cover object-center h-10 w-auto"
+          className="object-cover object-center"
         />
-        {/* Legibility scrims — top for the chrome, bottom for the copy. */}
+        {/* Legibility scrims — an even wash plus a heavier top + bottom so the
+            frosted cards and CTA read cleanly over the busy hero. */}
+        <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-black/55 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-linear-to-t from-black/85 via-black/45 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
       </div>
 
       {/* Foreground */}
-      <div className="relative z-10 flex h-full flex-col px-4 pt-6 pb-8 [@media(max-height:850px)]:pt-2.5">
-        <header className="flex items-center justify-between">
+      <div className="relative z-10 flex h-full min-h-0 flex-col px-4 pt-5 pb-6 [@media(max-height:750px)]:pt-3 [@media(max-height:750px)]:pb-4">
+        <header className="flex shrink-0 items-center justify-between">
           <Link
             href="/"
             className="flex items-center gap-0.5 rounded-pill border border-black/5 bg-white/95 px-2 py-1.5 text-[10px] font-bold leading-none text-ink shadow-[0_4px_14px_rgba(0,0,0,0.25)] backdrop-blur-sm transition duration-200 ease-out-soft hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_8px_22px_rgba(0,0,0,0.3)] focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 focus-visible:outline-none active:translate-y-0"
@@ -50,38 +59,69 @@ export default function ThankYouPage() {
           />
         </header>
 
-        {/* Campaign tagline plate — wide, centered, big italic display. This is
-            the screen's primary heading (every other screen has an <h1>); the two
-            lines are block spans so the plate reads as one heading to a SR. */}
-        <h1 className="mx-auto mt-5 w-88 max-w-full rounded-xl border border-white/25 bg-black/20 px-4 py-4 text-center backdrop-blur-xs backdrop-saturate-[1.4] animate-rise [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:py-2.5">
-          <span className="display block text-[1.95rem] leading-[0.95] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[1.5rem]">
+        {/* Confirmation plate — the screen's single <h1>. Block spans keep it a
+            single heading to a screen reader. */}
+        <h1 className="mx-auto mt-4 w-88 max-w-full shrink-0 rounded-xl border border-white/25 bg-black/25 px-4 py-3 text-center backdrop-blur-xs backdrop-saturate-[1.4] animate-rise [@media(max-height:750px)]:mt-2.5 [@media(max-height:750px)]:py-2.5">
+          <span className="display block text-[1.6rem] leading-[0.95] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
             Hero Ka Scooter
           </span>
-          <span className="display block text-[2.6rem] leading-[0.85] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[2rem]">
+          <span className="display block text-[2.15rem] leading-[0.85] text-white italic drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
             Scooter Ka Hero
           </span>
-           <p className="display block text-[1.6rem] leading-[0.85] text-white mt-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] [@media(max-height:700px)]:text-[1.8rem]">
-            Thank You For your Submission
-          </p>
-           <p className="w-full text-sm text-center leading-none font-normal mt-1 text-white [text-shadow:0px_4px_4px_#00000099] animate-rise [animation-delay:120ms]">
-            Your Hero Destini adventure is being created.<br/> It will
+          <span className="display mt-2 block text-[1.35rem] leading-[0.9] text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+            Thank You For Your Submission
+          </span>
+          <span className="mt-1.5 block text-xs font-normal leading-snug text-white/90 [text-shadow:0_2px_4px_#00000099]">
+            Your Hero Destini adventure is being created just for you. It will
             arrive on your WhatsApp soon.
-          </p>
+          </span>
         </h1>
 
-        {/* Create-another-story CTA + wordmark. */}
-        <div className="mt-auto  flex flex-col items-center gap-3 text-center">
-          {/* Same glass pill + travelling glow border as the home CTA → /details */}
-         
+        {/* Story catalogue — one tap target back into the flow (the whole
+            gallery is a single link). flex-1 so it soaks up leftover height and
+            the screen fits without scrolling. */}
+        <Link
+          href="/details"
+          aria-label="Create another story"
+          className="group mt-4 grid min-h-0 flex-1 grid-cols-2 grid-rows-4 gap-2 rounded-xl transition duration-200 ease-out-soft hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-hero-red-bright [@media(max-height:750px)]:mt-2.5"
+        >
+          {STORIES.map((story, i) => (
+            <div
+              key={story.slug}
+              style={{ animationDelay: `${120 + i * 45}ms` }}
+              className="glass-story-small-card relative min-h-0 overflow-hidden rounded-2xl border border-white/35 p-1.5 animate-rise"
+            >
+              {/* Full-bleed story photo fills the card; the frosted title tile
+                  floats over its right side (its backdrop-blur softens the
+                  photo behind the text). */}
+              <div className="relative size-full overflow-hidden rounded-md ">
+                <Image
+                  src={story.image}
+                  alt={story.imageAlt}
+                  fill
+                  sizes="220px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-y-1 right-1 flex w-[48%] items-center justify-center rounded-md  bg-black/35 px-1.5 backdrop-blur-[2px]">
+                  <span className="display-bold text-center text-[clamp(0.85rem,3.4vw,1.1rem)] leading-[1.05] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.7)]">
+                    {story.title}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </Link>
 
+        {/* Wordmark + Create-another-story CTA. */}
+        <div className="mt-4 flex shrink-0 flex-col items-center gap-2.5 [@media(max-height:750px)]:mt-2.5">
           <Image
             src="/destini-wordmark-2.png"
             alt="Hero Destini — available in 110cc and 125cc"
             width={324}
             height={61}
-            className="h-6 w-auto animate-rise [animation-delay:200ms]"
+            className="h-5 w-auto animate-rise [animation-delay:520ms]"
           />
-           <div className="relative w-full animate-rise [animation-delay:180ms]">
+          <div className="relative w-full animate-rise [animation-delay:560ms]">
             <span aria-hidden className="cta-glow" />
             <Link
               href="/details"
