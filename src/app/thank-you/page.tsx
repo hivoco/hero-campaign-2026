@@ -70,7 +70,7 @@ export default function ThankYouPage() {
         </h1>
 
         {/* Create-another-story CTA + wordmark. */}
-        <div className="mt-auto mb-3 flex flex-col items-center gap-4 text-center">
+        <div className="mt-auto  flex flex-col items-center gap-4 text-center">
           {/* Same glass pill + travelling glow border as the home CTA → /details */}
          
 
