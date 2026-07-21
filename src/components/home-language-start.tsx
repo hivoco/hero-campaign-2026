@@ -17,7 +17,9 @@ import { patchWizard } from "@/lib/wizard";
  */
 export function HomeLanguageStart() {
   const router = useRouter();
-  const [selected, setSelected] = React.useState<string | null>(null);
+  // Hindi is pre-selected by default so the CTA is enabled on load; the user
+  // can still switch to any other language.
+  const [selected, setSelected] = React.useState<string | null>("hindi");
 
   const start = () => {
     if (!selected) return;
