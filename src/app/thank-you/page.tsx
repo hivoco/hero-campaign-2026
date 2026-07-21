@@ -79,13 +79,13 @@ export default function ThankYouPage() {
             alt="Hero Destini — available in 110cc and 125cc"
             width={324}
             height={61}
-            className="h-5 w-auto animate-rise [animation-delay:200ms]"
+            className="h-6 w-auto animate-rise [animation-delay:200ms]"
           />
-           <div className="relative w-5/6 animate-rise [animation-delay:180ms]">
+           <div className="relative w-full animate-rise [animation-delay:180ms]">
             <span aria-hidden className="cta-glow" />
             <Link
               href="/details"
-              className="glass group relative z-10 flex h-10 w-full items-center justify-center rounded-pill bg-white/15! px-6 text-base font-bold leading-none tracking-normal text-white transition duration-200 ease-out-soft hover:-translate-y-0.5 hover:bg-white/25! hover:shadow-lift active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 [--glass-blur:16px]"
+              className="glass group relative z-10 flex h-12.5 w-full items-center justify-center rounded-pill bg-white/15! px-6 text-base font-bold leading-none tracking-normal text-white transition duration-200 ease-out-soft hover:-translate-y-0.5 hover:bg-white/25! hover:shadow-lift active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 [--glass-blur:16px]"
             >
               CREATE ANOTHER STORY
             </Link>
