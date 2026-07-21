@@ -494,6 +494,9 @@ export function DetailsForm() {
             />
             <span>&nbsp;Whatsapp.</span>
           </p>
+           <p className="px-1 -mt-3 text-[0.8rem] text-mist">
+            <span>*child's age has to be between 4 years and 10 years.</span> &nbsp;
+          </p>
         </div>
 
         {/* Consent + primary CTA, grouped and pushed to the bottom (mt-auto) so
