@@ -93,6 +93,11 @@ export function DetailsForm() {
   const [consentChecked, setConsentChecked] = React.useState(false);
   // The number we last looked up, so typing doesn't refire the request.
   const tcLookedUpForRef = React.useRef<string | null>(null);
+  // Everything-filled? Mirrors the inputs' own "valid → tint" cue onto the CTA:
+  // native fields valid (name + phone pattern) plus the non-native requirements
+  // (selfie, both roles, consent). When true the button takes the same filled
+  // tint the fields do, so a complete form reads as ready-to-send.
+  const [ready, setReady] = React.useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const selfieButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -136,6 +141,23 @@ export function DetailsForm() {
     }
   }, [prefillConsent]);
 
+  // Recompute the CTA's "ready" tint: the native fields must pass their own
+  // constraints (checkValidity covers name + phone pattern — it shows no UI, it
+  // just reports) and every non-native requirement must be met too.
+  const refreshReady = React.useCallback(() => {
+    const fieldsValid = formRef.current?.checkValidity() ?? false;
+    setReady(
+      fieldsValid && !!selfie && !!parentRole && !!childRole && consentChecked,
+    );
+  }, [selfie, parentRole, childRole, consentChecked]);
+
+  // Re-evaluate whenever a non-native requirement flips (roles/consent/selfie);
+  // typing is handled in onFieldInput. Also covers the mount prefill, which sets
+  // field values without firing input events.
+  React.useEffect(() => {
+    refreshReady();
+  }, [refreshReady]);
+
   // Persist name/phone as the user types (event-delegated on the form).
   const onFieldInput = (event: React.SyntheticEvent<HTMLFormElement>) => {
     const target = event.target as HTMLInputElement;
@@ -144,6 +166,8 @@ export function DetailsForm() {
       patchWizard({ phone: target.value });
       void prefillConsent(target.value);
     }
+    // The typed value changes native validity — retint the CTA to match.
+    refreshReady();
   };
 
   // Role picks — mirror to the wizard store so back-nav restores them.
@@ -560,7 +584,13 @@ export function DetailsForm() {
         >
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-pill   transition-colors duration-200 group-hover:bg-hero-red"
+            className={cn(
+              // Transparent glass by default → the same filled tint the inputs
+              // take once "done" when the whole form is ready → full hero-red on
+              // hover (more specific `group-hover` selector wins over the tint).
+              "pointer-events-none absolute inset-0 rounded-pill transition-colors duration-200 group-hover:bg-hero-red",
+              ready && "bg-hero-red",
+            )}
           />
           <span className="relative z-10 flex items-center">
             {submitting ? (
