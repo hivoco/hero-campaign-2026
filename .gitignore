@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 .trash/
+*.docx
 
 # debug
 npm-debug.log*
