@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+
 /**
  * Thank-you / end screen (screen 8).
  *
@@ -68,17 +69,27 @@ export default function ThankYouPage() {
           </p>
         </h1>
 
-        {/* Confirmation + wordmark. */}
-        <div className="mt-auto mb-7  flex flex-col items-center text-center">
+        {/* Create-another-story CTA + wordmark. */}
+        <div className="mt-auto mb-5 flex flex-col items-center gap-4 text-center">
+          {/* Same glass pill + travelling glow border as the home CTA → /details */}
          
+
           <Image
             src="/destini-wordmark-2.png"
             alt="Hero Destini — available in 110cc and 125cc"
             width={324}
             height={61}
-            
-            className="mt-4 h-5 w-auto animate-rise [animation-delay:200ms]"
+            className="h-5 w-auto animate-rise [animation-delay:200ms]"
           />
+           <div className="relative w-4/5 animate-rise [animation-delay:180ms]">
+            <span aria-hidden className="cta-glow" />
+            <Link
+              href="/details"
+              className="glass group relative z-10 flex h-10 w-full items-center justify-center rounded-pill bg-white/15! px-6 text-lg font-bold leading-none tracking-normal text-white transition duration-200 ease-out-soft hover:-translate-y-0.5 hover:bg-white/25! hover:shadow-lift active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-red-bright focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 [--glass-blur:16px]"
+            >
+              CREATE ANOTHER STORY
+            </Link>
+          </div>
         </div>
       </div>
     </main>
