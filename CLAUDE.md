@@ -46,6 +46,15 @@ kebab-case and organise into subfolders (`public/worlds/`, `public/stories/`); m
 closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update both when done.
 
 **Key decisions already made**:
+- **Google Analytics (GA4)**: added via the official **`@next/third-parties/google`** `<GoogleAnalytics>`
+  component in `src/app/layout.tsx` (not hand-placed `<script>` tags) — it loads `gtag.js` after hydration
+  so it never blocks first paint. The measurement ID is `NEXT_PUBLIC_GA_ID` with a hardcoded fallback
+  (`G-Z46LB01E8V`), rendered only when an ID is present.
+- **SEO metadata**: the root `metadata` export in `src/app/layout.tsx` carries marketing title/description,
+  `keywords`, Open Graph + Twitter (`summary_large_image`) cards using the **`hero-logo-2.png`** share image,
+  `robots`, and a `canonical` (`alternates.canonical: "/"`). Absolute URLs need **`metadataBase`**, built
+  from **`NEXT_PUBLIC_SITE_URL`**, which defaults to the **confirmed production domain**
+  `https://destini.heromotocorp.com` (override via env for staging/preview).
 - **Backend API integration** (`src/lib/api.ts`, base `NEXT_PUBLIC_API_BASE_URL`, defaults to
   `http://localhost:8000`). Three calls, all client-side: `check_photo` (selfie gate → token + roles,
   wired through `selfie-check.ts`), `POST /api/v1/video/submit` (multipart on Send OTP — creates the job,
