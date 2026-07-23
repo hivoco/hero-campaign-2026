@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { MetaPixel } from "@/components/meta-pixel";
 
 /** GA4 measurement ID. Overridable via env for other environments; falls back
  *  to the campaign's own ID so analytics work without extra config. */
@@ -116,6 +117,9 @@ export default function RootLayout({
       {/* GA4 via gtag.js — the official Next.js integration; loads after
           hydration so it never blocks first paint. */}
       {GA_ID ? <GoogleAnalytics gaId={GA_ID} /> : null}
+      {/* Meta Pixel base install (init + PageView); per-button events fire via
+          trackPixel(). */}
+      <MetaPixel />
     </html>
   );
 }

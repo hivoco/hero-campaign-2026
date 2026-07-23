@@ -50,6 +50,12 @@ closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update 
   component in `src/app/layout.tsx` (not hand-placed `<script>` tags) — it loads `gtag.js` after hydration
   so it never blocks first paint. The measurement ID is `NEXT_PUBLIC_GA_ID` with a hardcoded fallback
   (`G-Z46LB01E8V`), rendered only when an ID is present.
+- **Meta (Facebook) Pixel**: base pixel loaded once via `src/components/meta-pixel.tsx` (a `next/script`
+  `afterInteractive` install → `fbq('init', …)` + `PageView`), mounted in `src/app/layout.tsx`. ID is
+  `NEXT_PUBLIC_FB_PIXEL_ID` with fallback `860703767703104`. Custom events fire via `trackPixel()`
+  (`src/lib/fbpixel.ts`) on three buttons: **Start Your Adventure** → `Start_Journey_DestiniTech`
+  (`home-language-start.tsx`), **Send OTP** → `SEND_OTP_DestiniTech` (`details-form.tsx`, once the form
+  is valid and submitting), **Submit & Generate** → `Generate_Video_DestiniTech` (`verify-modal.tsx`).
 - **SEO metadata**: the root `metadata` export in `src/app/layout.tsx` carries marketing title/description,
   `keywords`, Open Graph + Twitter (`summary_large_image`) cards using the **`hero-logo-2.png`** share image,
   `robots`, and a `canonical` (`alternates.canonical: "/"`). Absolute URLs need **`metadataBase`**, built

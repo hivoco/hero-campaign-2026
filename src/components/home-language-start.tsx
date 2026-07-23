@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { languages } from "@/lib/languages";
 import { patchWizard } from "@/lib/wizard";
+import { trackPixel } from "@/lib/fbpixel";
 
 /**
  * Home CTA — language chips + the "Start Your Adventure" button.
@@ -23,6 +24,8 @@ export function HomeLanguageStart() {
 
   const start = () => {
     if (!selected) return;
+    // Meta Pixel: user began the journey from the landing CTA.
+    trackPixel("Start_Journey_DestiniTech");
     patchWizard({ lang: selected });
     // Straight to the details form (no story screen — the story is assigned at
     // random by the backend). Read the query at click time so the landing page

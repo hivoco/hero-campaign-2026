@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { verifyOtp, resendOtp, ApiError } from "@/lib/api";
 import { setStoredSelfie } from "@/lib/wizard";
+import { trackPixel } from "@/lib/fbpixel";
 import { DETAILS_SCROLL_ID, useScrollLock } from "@/hooks/use-scroll-lock";
 
 const OTP_LENGTH = 6;
@@ -189,6 +190,8 @@ export function VerifyModal({ onClose, mobile }: Props) {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
+    // Meta Pixel: user submitted the OTP to generate their video.
+    trackPixel("Generate_Video_DestiniTech");
     setSubmitting(true);
     try {
       const res = await verifyOtp(mobile, otp);
