@@ -56,6 +56,8 @@ closely; keep **README.md human-facing** and **CLAUDE.md agent-facing**; update 
   (`src/lib/fbpixel.ts`) on three buttons: **Start Your Adventure** → `Start_Journey_DestiniTech`
   (`home-language-start.tsx`), **Send OTP** → `SEND_OTP_DestiniTech` (`details-form.tsx`, once the form
   is valid and submitting), **Submit & Generate** → `Generate_Video_DestiniTech` (`verify-modal.tsx`).
+- **MRN Digital pixel**: a site-wide 1×1 tracking `<img>` (`https://trk.mrndigital.in/pixel?av=…`) in the
+  `src/app/layout.tsx` body — plain `<img>` (not next/image), `display:none`, fires once per page load.
 - **SEO metadata**: the root `metadata` export in `src/app/layout.tsx` carries marketing title/description,
   `keywords`, Open Graph + Twitter (`summary_large_image`) cards using the **`hero-logo-2.png`** share image,
   `robots`, and a `canonical` (`alternates.canonical: "/"`). Absolute URLs need **`metadataBase`**, built
