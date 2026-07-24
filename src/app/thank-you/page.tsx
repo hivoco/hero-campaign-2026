@@ -83,13 +83,16 @@ export default function ThankYouPage() {
         <Link
           href="/details"
           aria-label="Create another story"
-          className="group mt-4 grid min-h-0 flex-1 grid-cols-2 grid-rows-4 gap-2 rounded-xl transition duration-200 ease-out-soft hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-hero-red-bright [@media(max-height:750px)]:mt-2.5"
+          className="group mt-4 grid min-h-0 flex-1 grid-cols-2  grid-rows-4 gap-2 rounded-xl transition duration-200 ease-out-soft hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-hero-red-bright [@media(max-height:750px)]:mt-2.5"
         >
           {STORIES.map((story, i) => (
             <div
               key={story.slug}
               style={{ animationDelay: `${120 + i * 45}ms` }}
-              className="glass-story-small-card relative min-h-0 overflow-hidden rounded-2xl border border-white/35 p-1.5 animate-rise"
+              // When the story count is odd, the final card is both `:last-child`
+              // and at an odd position — `last:odd:*` then spans both columns and
+              // centers it at one-column width (gap-2 = 0.5rem → half-gap 0.25rem).
+              className="glass-story-small-card relative min-h-0 overflow-hidden rounded-2xl  border border-white/35 p-1.5 animate-rise last:odd:col-span-2 last:odd:w-[calc(50%-0.25rem)] last:odd:justify-self-center"
             >
               {/* Full-bleed story photo fills the card; the frosted title tile
                   floats over its right side (its backdrop-blur softens the

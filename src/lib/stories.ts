@@ -52,12 +52,12 @@ export const STORIES: Story[] = [
     image: "/stories/tired-dragon.png",
     imageAlt: "A young red dragon gazing over a moonlit mountain valley dotted with village lights",
   },
-  {
-    slug: "the-snowman-attack",
-    title: "The Snowman Attack",
-    image: "/stories/snowman.png",
-    imageAlt: "A cheerful top-hatted snowman in a frozen, icicle-filled forest",
-  },
+  // {
+  //   slug: "the-snowman-attack",
+  //   title: "The Snowman Attack",
+  //   image: "/stories/snowman.png",
+  //   imageAlt: "A cheerful top-hatted snowman in a frozen, icicle-filled forest",
+  // },
   {
     slug: "save-that-puppy",
     title: "Save That Puppy",
