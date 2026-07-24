@@ -113,17 +113,6 @@ export default function RootLayout({
       <body className="min-h-full font-body">
         {children}
         <Toaster />
-        {/* MRN Digital tracking pixel — fires once per page load, site-wide. A
-            plain <img> (not next/image) so it's a real, unoptimized 1×1 request. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://trk.mrndigital.in/pixel?av=65438668f136ac49a726861c"
-          alt=""
-          width={1}
-          height={1}
-          aria-hidden
-          style={{ display: "none" }}
-        />
       </body>
       {/* GA4 via gtag.js — the official Next.js integration; loads after
           hydration so it never blocks first paint. */}

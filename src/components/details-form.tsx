@@ -17,6 +17,7 @@ import {
 } from "@/lib/selfie-check";
 import { submitVideo, ApiError } from "@/lib/api";
 import { trackPixel } from "@/lib/fbpixel";
+import { fireMrnPixel } from "@/lib/mrn-pixel";
 import {
   getWizard,
   patchWizard,
@@ -258,8 +259,9 @@ export function DetailsForm() {
     const parentName = String(data.get("name") ?? "").trim();
     const phone = String(data.get("phone") ?? "").trim();
 
-    // Meta Pixel: form is valid and the OTP send is proceeding.
+    // Trackers: form is valid and the OTP send is proceeding.
     trackPixel("SEND_OTP_DestiniTech");
+    fireMrnPixel();
     setSubmitting(true);
     try {
       const res = await submitVideo({
